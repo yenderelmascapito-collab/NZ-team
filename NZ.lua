@@ -1,5 +1,4 @@
---// NZ MULTI GAME HUB v2.1
---// Intro Delay • Key System • Webhook Logger • Full Menus
+--// NZ MULTI HUB v2.1 FIXED
 
 ------------------------
 -- ANTI DOUBLE EXEC
@@ -12,19 +11,10 @@ getgenv().NZ_MULTI_HUB = true
 ------------------------
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
-
-------------------------
--- CONFIG
-------------------------
-local KEY = "NZteam"
-local WEBHOOK = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk"
-local START_TIME = os.time()
-local USED_FUNCTIONS = {}
 
 ------------------------
 -- PLACE IDS
@@ -46,89 +36,16 @@ pcall(function()
 end)
 
 ------------------------
--- WEBHOOK LOGGER
-------------------------
-local function SendWebhook(action)
-    table.insert(USED_FUNCTIONS, action)
-
-    local elapsed = os.time() - START_TIME
-    local hours = math.floor(elapsed / 3600)
-    local minutes = math.floor((elapsed % 3600) / 60)
-    local seconds = elapsed % 60
-
-    local data = {
-        embeds = {{
-            title = "🚀 NZ MULTI HUB EXECUTION",
-            color = 11141290,
-            fields = {
-                {name="👤 Player", value=LP.Name, inline=true},
-                {name="🆔 UserId", value=tostring(LP.UserId), inline=true},
-                {name="🔗 Profile", value="https://www.roblox.com/users/"..LP.UserId.."/profile", inline=false},
-                {name="🎮 Game", value=game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name, inline=false},
-                {name="⚙️ Action", value=action, inline=false},
-                {name="⏱️ Time Using Script",
-                 value=string.format("%02dh %02dm %02ds",hours,minutes,seconds),
-                 inline=false},
-                {name="📜 Used Functions",
-                 value=table.concat(USED_FUNCTIONS,"\n"),
-                 inline=false}
-            },
-            footer = {text="NZ Team | Script Hub"},
-            timestamp = DateTime.now():ToIsoDate()
-        }}
-    }
-
-    pcall(function()
-        HttpService:RequestAsync({
-            Url = WEBHOOK,
-            Method = "POST",
-            Headers = {["Content-Type"]="application/json"},
-            Body = HttpService:JSONEncode(data)
-        })
-    end)
-end
-
-------------------------
--- KEY SYSTEM
-------------------------
-local function RequestKey()
-    local result = ""
-    local gui = Instance.new("ScreenGui",game.CoreGui)
-    gui.Name = "NZ_KEY"
-
-    local box = Instance.new("TextBox",gui)
-    box.Size = UDim2.fromOffset(260,50)
-    box.Position = UDim2.new(.5,-130,.5,-25)
-    box.PlaceholderText = "Enter Key"
-    box.Text = ""
-    box.Font = Enum.Font.GothamBold
-    box.TextSize = 18
-
-    box.FocusLost:Wait()
-    result = box.Text
-    gui:Destroy()
-    return result
-end
-
-if RequestKey() ~= KEY then
-    warn("Wrong key")
-    return
-end
-
-SendWebhook("Key Accepted")
-
-------------------------
 -- GUI
 ------------------------
-local ScreenGui = Instance.new("ScreenGui",game.CoreGui)
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "NZ_MULTI_HUB"
-ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 
 ------------------------
 -- BLUR
 ------------------------
-local Blur = Instance.new("BlurEffect",Lighting)
+local Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
 
 ------------------------
@@ -161,7 +78,7 @@ local function Splash(txt,time)
 end
 
 ------------------------
--- FRAME
+-- MAIN FRAME
 ------------------------
 local Main = Instance.new("Frame",ScreenGui)
 Main.Size = UDim2.fromOffset(380,520)
@@ -174,7 +91,7 @@ Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
 Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB v2.1"
+Header.Text = "NZ MULTI HUB"
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 20
 Header.TextColor3 = Color3.fromRGB(170,120,255)
@@ -212,52 +129,73 @@ local function Button(txt,cb)
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 14
     b.TextColor3 = Color3.fromRGB(235,235,235)
-    b.BorderSizePixel = 0
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
-    b.MouseButton1Click:Connect(function()
-        SendWebhook(txt)
-        cb()
-    end)
+    b.MouseButton1Click:Connect(cb)
 end
 
 local function Rejoin()
-    SendWebhook("Rejoin Server")
-    TeleportService:Teleport(game.PlaceId,LP)
+    TeleportService:Teleport(game.PlaceId, LP)
 end
 
 ------------------------
--- MENUS
+-- TSB MENU (INTEGRADO)
 ------------------------
-local function MainMenu()
+function TSBMenu()
     Clear()
-    Button("🥊 Ultimate Battlegrounds",function()
-        game.PlaceId == PLACE_IDS.UBG and UBGMenu() or TeleportService:Teleport(PLACE_IDS.UBG,LP)
+
+    Button("🛡️ AUTO BLOCK", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
     end)
-    Button("💪 The Strongest Battlegrounds",function()
-        game.PlaceId == PLACE_IDS.TSB and TSBMenu() or TeleportService:Teleport(PLACE_IDS.TSB,LP)
+
+    Button("⚡ AUTO TECHS V2", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
     end)
-    Button("🦸 Project Viltrumites",function()
-        game.PlaceId == PLACE_IDS.VILTRUM and VILMenu() or TeleportService:Teleport(PLACE_IDS.VILTRUM,LP)
+
+    Button("➡️ SIDE DASH ASSIST", function()
+        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
     end)
-    Button("🏀 Basketball Zero",function()
-        game.PlaceId == PLACE_IDS.BBZ and BBZMenu() or TeleportService:Teleport(PLACE_IDS.BBZ,LP)
+
+    Button("🔁 M1 RESET", function()
+        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
     end)
-    Button("🌐 Universal",UniversalMenu)
-    Button("🔄 Rejoin",Rejoin)
+
+    Button("🔥 SUPA TECH", function()
+        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
+    end)
+
+    Button("🐱 MEOW TECH", function()
+        loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
+    end)
+
+    Button("🔄 Rejoin", Rejoin)
+    Button("⬅ Back", MainMenu)
 end
 
--- (Los menús UBGMenu, TSBMenu, VILMenu, BBZMenu y UniversalMenu
--- se mantienen IGUAL que el mensaje anterior, con su botón Rejoin y Back)
+------------------------
+-- MAIN MENU
+------------------------
+function MainMenu()
+    Clear()
+
+    Button("💪 The Strongest Battlegrounds", function()
+        if game.PlaceId == PLACE_IDS.TSB then
+            TSBMenu()
+        else
+            TeleportService:Teleport(PLACE_IDS.TSB, LP)
+        end
+    end)
+
+    Button("🔄 Rejoin", Rejoin)
+end
 
 ------------------------
--- START FLOW
+-- START
 ------------------------
 task.spawn(function()
     Splash("NZ MULTI HUB",1.2)
     Splash("by NZ Team",1)
     Main.Visible = true
     MainMenu()
-    SendWebhook("Menu Opened")
 end)
 
 ------------------------
