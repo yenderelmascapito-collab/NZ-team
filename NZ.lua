@@ -1,16 +1,11 @@
---// NZ MULTI GAME HUB v1.5
---// Anti Double Execution • Safe UI • RGB Intro
+--// NZ MULTI GAME HUB v1.7
+--// Draggable UI • Join Confirmation • Anti Double Exec
 
 ------------------------
--- ANTI DOUBLE EXECUTION
+-- ANTI DOUBLE EXEC
 ------------------------
 if getgenv().NZ_MULTI_HUB_LOADED then
-    warn("[NZ HUB] Script already loaded.")
-    game:GetService("StarterGui"):SetCore("SendNotification",{
-        Title = "NZ MULTI HUB",
-        Text = "Hub already loaded!",
-        Duration = 4
-    })
+    warn("[NZ HUB] Already loaded")
     return
 end
 getgenv().NZ_MULTI_HUB_LOADED = true
@@ -21,6 +16,7 @@ getgenv().NZ_MULTI_HUB_LOADED = true
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
 local LP = Players.LocalPlayer
 
@@ -35,7 +31,7 @@ local PLACE_IDS = {
 }
 
 ------------------------
--- CLEAN OLD GUI (SAFETY)
+-- CLEAN
 ------------------------
 pcall(function()
     if game.CoreGui:FindFirstChild("NZ_MULTI_HUB") then
@@ -90,27 +86,58 @@ local function Splash(text, duration)
 end
 
 ------------------------
--- MENU VISIBILITY
+-- VISIBILITY
 ------------------------
 local Main, Shadow
 local function ShowMenu(state)
-    if Main then
-        Main.Visible = state
-        Shadow.Visible = state
-    end
+    Main.Visible = state
+    Shadow.Visible = state
 end
 
 ------------------------
--- GAME CHECK
+-- CONFIRM JOIN
 ------------------------
-local function CheckGame(expectedId, name)
-    if game.PlaceId ~= expectedId then
-        ShowMenu(false)
-        Splash("Wrong game! Open "..name,1.6)
-        ShowMenu(true)
-        return false
+local function ConfirmJoin(placeId, name)
+    ShowMenu(false)
+
+    local frame = Instance.new("Frame", ScreenGui)
+    frame.Size = UDim2.fromOffset(360,180)
+    frame.Position = UDim2.new(0.5,-180,0.5,-90)
+    frame.BackgroundColor3 = Color3.fromRGB(15,15,20)
+    frame.BorderSizePixel = 0
+    Instance.new("UICorner",frame).CornerRadius = UDim.new(0,18)
+
+    local txt = Instance.new("TextLabel",frame)
+    txt.Size = UDim2.new(1,-20,0,80)
+    txt.Position = UDim2.new(0,10,0,10)
+    txt.BackgroundTransparency = 1
+    txt.Text = "No estás en "..name.."\n¿Quieres unirte?"
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 18
+    txt.TextWrapped = true
+    txt.TextColor3 = Color3.fromRGB(235,235,235)
+
+    local function makeBtn(text,x,callback)
+        local b = Instance.new("TextButton",frame)
+        b.Size = UDim2.fromOffset(140,40)
+        b.Position = UDim2.new(0.5,x,1,-55)
+        b.BackgroundColor3 = Color3.fromRGB(40,40,60)
+        b.Text = text
+        b.Font = Enum.Font.GothamBold
+        b.TextSize = 14
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner",b).CornerRadius = UDim.new(0,12)
+        b.MouseButton1Click:Connect(callback)
     end
-    return true
+
+    makeBtn("✅ Sí",-150,function()
+        TeleportService:Teleport(placeId, LP)
+    end)
+
+    makeBtn("❌ No",10,function()
+        frame:Destroy()
+        ShowMenu(true)
+    end)
 end
 
 ------------------------
@@ -136,16 +163,42 @@ Main.Visible = false
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 
 ------------------------
--- HEADER
+-- HEADER (DRAG)
 ------------------------
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
 Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB v1.5"
+Header.Text = "NZ MULTI HUB v1.7"
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 20
 Header.TextColor3 = Color3.fromRGB(170,120,255)
+Header.Active = true
+Header.Selectable = true
 Instance.new("UICorner",Header).CornerRadius = UDim.new(0,26)
+
+-- Drag system
+do
+    local dragging, dragStart, startPos
+    Header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            Main.Position = startPos + UDim2.fromOffset(delta.X, delta.Y)
+            Shadow.Position = Main.Position - UDim2.fromOffset(20,20)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
 
 ------------------------
 -- HOLDER
@@ -158,7 +211,6 @@ Holder.BackgroundTransparency = 1
 
 local Layout = Instance.new("UIListLayout",Holder)
 Layout.Padding = UDim.new(0,12)
-
 Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Holder.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y + 10)
 end)
@@ -176,10 +228,7 @@ local function Button(text, callback)
     btn.TextColor3 = Color3.fromRGB(235,235,235)
     btn.BorderSizePixel = 0
     Instance.new("UICorner",btn).CornerRadius = UDim.new(0,14)
-
-    btn.MouseButton1Click:Connect(function()
-        pcall(callback)
-    end)
+    btn.MouseButton1Click:Connect(callback)
 end
 
 ------------------------
@@ -187,77 +236,65 @@ end
 ------------------------
 local function Clear()
     for _,v in ipairs(Holder:GetChildren()) do
-        if v:IsA("TextButton") then
-            v:Destroy()
-        end
+        if v:IsA("TextButton") then v:Destroy() end
     end
 end
 
 ------------------------
--- TOGGLE KEY
+-- REJOIN
 ------------------------
-local toggleKey = Enum.KeyCode.Z
-local waitingKey = false
-
-------------------------
--- MAIN MENU
-------------------------
-local function MainMenu()
-    Clear()
-
-    Button("🥊 Ultimate Battlegrounds", function()
-        if not CheckGame(PLACE_IDS.UBG,"Ultimate Battlegrounds") then return end
-        loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
-    end)
-
-    Button("💪 The Strongest Battlegrounds", function()
-        if not CheckGame(PLACE_IDS.TSB,"The Strongest Battlegrounds") then return end
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/TSB-NZ/refs/heads/main/tsb.lua"))()
-    end)
-
-    Button("🦸 Project Viltrumites", function()
-        if not CheckGame(PLACE_IDS.VILTRUM,"Project Viltrumites") then return end
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
-    end)
-
-    Button("🏀 Basketball Zero", function()
-        if not CheckGame(PLACE_IDS.BBZ,"Basketball Zero") then return end
-        loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
-    end)
-
-    Button("⌨️ Change Toggle Key", function()
-        waitingKey = true
-        Splash("Press any key...",1)
-    end)
+local function Rejoin()
+    TeleportService:Teleport(game.PlaceId, LP)
 end
 
 ------------------------
--- INTRO FIRST → MENU
+-- MENUS
+------------------------
+local function UniversalMenu()
+    Clear()
+    Button("♾️ Infinite Yield", function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end)
+    Button("🔄 Rejoin", Rejoin)
+    Button("⬅️ Back", MainMenu)
+end
+
+function MainMenu()
+    Clear()
+
+    local function GameButton(text, id)
+        Button(text,function()
+            if game.PlaceId ~= id then
+                ConfirmJoin(id, text)
+            end
+        end)
+    end
+
+    GameButton("🥊 Ultimate Battlegrounds", PLACE_IDS.UBG)
+    GameButton("💪 The Strongest Battlegrounds", PLACE_IDS.TSB)
+    GameButton("🦸 Project Viltrumites", PLACE_IDS.VILTRUM)
+    GameButton("🏀 Basketball Zero", PLACE_IDS.BBZ)
+
+    Button("🌐 Universal Scripts", UniversalMenu)
+    Button("🔄 Rejoin", Rejoin)
+end
+
+------------------------
+-- INTRO
 ------------------------
 task.spawn(function()
     Splash("NZ MULTI GAME HUB",1.2)
     Splash("by NZ Team",1)
-    Splash("Anti Double Execution",1)
-    Splash("Toggle Key: Z",1)
-
     MainMenu()
     ShowMenu(true)
 end)
 
 ------------------------
--- INPUT
+-- TOGGLE
 ------------------------
 UIS.InputBegan:Connect(function(input,gp)
     if gp then return end
-
-    if waitingKey then
-        toggleKey = input.KeyCode
-        waitingKey = false
-        Splash("Toggle Key: "..toggleKey.Name,1.2)
-        return
-    end
-
-    if input.KeyCode == toggleKey then
+    if input.KeyCode == Enum.KeyCode.Z then
         ShowMenu(not Main.Visible)
     end
 end)
