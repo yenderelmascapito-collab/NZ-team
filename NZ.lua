@@ -1,5 +1,19 @@
---// NZ MULTI GAME HUB v1.3
---// Full Intro + RGB + Toggle Key System
+--// NZ MULTI GAME HUB v1.5
+--// Anti Double Execution • Safe UI • RGB Intro
+
+------------------------
+-- ANTI DOUBLE EXECUTION
+------------------------
+if getgenv().NZ_MULTI_HUB_LOADED then
+    warn("[NZ HUB] Script already loaded.")
+    game:GetService("StarterGui"):SetCore("SendNotification",{
+        Title = "NZ MULTI HUB",
+        Text = "Hub already loaded!",
+        Duration = 4
+    })
+    return
+end
+getgenv().NZ_MULTI_HUB_LOADED = true
 
 ------------------------
 -- SERVICES
@@ -21,7 +35,7 @@ local PLACE_IDS = {
 }
 
 ------------------------
--- CLEAN
+-- CLEAN OLD GUI (SAFETY)
 ------------------------
 pcall(function()
     if game.CoreGui:FindFirstChild("NZ_MULTI_HUB") then
@@ -58,7 +72,7 @@ local function Splash(text, duration)
 
     task.spawn(function()
         while label.Parent do
-            label.TextColor3 = Color3.fromHSV(tick()%5/5,1,1)
+            label.TextColor3 = Color3.fromHSV((tick()%5)/5,1,1)
             task.wait(0.05)
         end
     end)
@@ -76,21 +90,24 @@ local function Splash(text, duration)
 end
 
 ------------------------
--- INTRO SEQUENCE
+-- MENU VISIBILITY
 ------------------------
-task.spawn(function()
-    Splash("NZ MULTI GAME HUB",1.2)
-    Splash("by NZ Team",1)
-    Splash("Auto Detect Games",1)
-    Splash("Toggle Key: Z",1)
-end)
+local Main, Shadow
+local function ShowMenu(state)
+    if Main then
+        Main.Visible = state
+        Shadow.Visible = state
+    end
+end
 
 ------------------------
 -- GAME CHECK
 ------------------------
 local function CheckGame(expectedId, name)
     if game.PlaceId ~= expectedId then
-        Splash("Wrong game! Open "..name,1.5)
+        ShowMenu(false)
+        Splash("Wrong game! Open "..name,1.6)
+        ShowMenu(true)
         return false
     end
     return true
@@ -99,21 +116,23 @@ end
 ------------------------
 -- SHADOW
 ------------------------
-local Shadow = Instance.new("ImageLabel", ScreenGui)
+Shadow = Instance.new("ImageLabel", ScreenGui)
 Shadow.Image = "rbxassetid://1316045217"
 Shadow.Size = UDim2.fromOffset(420,560)
 Shadow.Position = UDim2.new(0.5,-210,0.5,-280)
 Shadow.BackgroundTransparency = 1
 Shadow.ImageTransparency = 0.35
+Shadow.Visible = false
 
 ------------------------
 -- MAIN FRAME
 ------------------------
-local Main = Instance.new("Frame", ScreenGui)
+Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.fromOffset(380,520)
 Main.Position = UDim2.new(0.5,-190,0.5,-260)
 Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Main.BorderSizePixel = 0
+Main.Visible = false
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 
 ------------------------
@@ -122,7 +141,7 @@ Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
 Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB v1.3"
+Header.Text = "NZ MULTI HUB v1.5"
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 20
 Header.TextColor3 = Color3.fromRGB(170,120,255)
@@ -175,7 +194,7 @@ local function Clear()
 end
 
 ------------------------
--- TOGGLE KEY SYSTEM
+-- TOGGLE KEY
 ------------------------
 local toggleKey = Enum.KeyCode.Z
 local waitingKey = false
@@ -213,12 +232,17 @@ local function MainMenu()
 end
 
 ------------------------
--- START
+-- INTRO FIRST → MENU
 ------------------------
-task.wait(2.5)
-MainMenu()
-Main.Visible = true
-Shadow.Visible = true
+task.spawn(function()
+    Splash("NZ MULTI GAME HUB",1.2)
+    Splash("by NZ Team",1)
+    Splash("Anti Double Execution",1)
+    Splash("Toggle Key: Z",1)
+
+    MainMenu()
+    ShowMenu(true)
+end)
 
 ------------------------
 -- INPUT
@@ -234,7 +258,6 @@ UIS.InputBegan:Connect(function(input,gp)
     end
 
     if input.KeyCode == toggleKey then
-        Main.Visible = not Main.Visible
-        Shadow.Visible = Main.Visible
+        ShowMenu(not Main.Visible)
     end
 end)
