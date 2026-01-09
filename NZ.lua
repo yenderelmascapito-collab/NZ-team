@@ -1,5 +1,5 @@
---// NZ MULTI GAME HUB v1.2
---// Clean version - No Music
+--// NZ MULTI GAME HUB v1.3
+--// Full Intro + RGB + Toggle Key System
 
 ------------------------
 -- SERVICES
@@ -11,7 +11,7 @@ local Lighting = game:GetService("Lighting")
 local LP = Players.LocalPlayer
 
 ------------------------
--- PLACE IDS (USER PROVIDED)
+-- PLACE IDS
 ------------------------
 local PLACE_IDS = {
     UBG = 11815767793,
@@ -21,7 +21,7 @@ local PLACE_IDS = {
 }
 
 ------------------------
--- CLEAN OLD GUI
+-- CLEAN
 ------------------------
 pcall(function()
     if game.CoreGui:FindFirstChild("NZ_MULTI_HUB") then
@@ -44,7 +44,7 @@ local Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
 
 ------------------------
--- SPLASH MESSAGE
+-- SPLASH RGB
 ------------------------
 local function Splash(text, duration)
     local label = Instance.new("TextLabel", ScreenGui)
@@ -53,28 +53,44 @@ local function Splash(text, duration)
     label.BackgroundTransparency = 1
     label.Text = text
     label.Font = Enum.Font.GothamBold
-    label.TextSize = 30
-    label.TextColor3 = Color3.fromHSV(math.random(),1,1)
+    label.TextSize = 32
     label.TextTransparency = 1
 
-    TweenService:Create(label,TweenInfo.new(0.35),{TextTransparency=0}):Play()
-    TweenService:Create(Blur,TweenInfo.new(0.35),{Size=18}):Play()
+    task.spawn(function()
+        while label.Parent do
+            label.TextColor3 = Color3.fromHSV(tick()%5/5,1,1)
+            task.wait(0.05)
+        end
+    end)
+
+    TweenService:Create(label,TweenInfo.new(0.4),{TextTransparency=0}):Play()
+    TweenService:Create(Blur,TweenInfo.new(0.4),{Size=20}):Play()
 
     task.wait(duration)
 
-    TweenService:Create(label,TweenInfo.new(0.35),{TextTransparency=1}):Play()
-    TweenService:Create(Blur,TweenInfo.new(0.35),{Size=0}):Play()
+    TweenService:Create(label,TweenInfo.new(0.4),{TextTransparency=1}):Play()
+    TweenService:Create(Blur,TweenInfo.new(0.4),{Size=0}):Play()
 
-    task.wait(0.35)
+    task.wait(0.4)
     label:Destroy()
 end
+
+------------------------
+-- INTRO SEQUENCE
+------------------------
+task.spawn(function()
+    Splash("NZ MULTI GAME HUB",1.2)
+    Splash("by NZ Team",1)
+    Splash("Auto Detect Games",1)
+    Splash("Toggle Key: Z",1)
+end)
 
 ------------------------
 -- GAME CHECK
 ------------------------
 local function CheckGame(expectedId, name)
     if game.PlaceId ~= expectedId then
-        Splash("Wrong game! Open "..name, 1.5)
+        Splash("Wrong game! Open "..name,1.5)
         return false
     end
     return true
@@ -89,7 +105,6 @@ Shadow.Size = UDim2.fromOffset(420,560)
 Shadow.Position = UDim2.new(0.5,-210,0.5,-280)
 Shadow.BackgroundTransparency = 1
 Shadow.ImageTransparency = 0.35
-Shadow.Visible = false
 
 ------------------------
 -- MAIN FRAME
@@ -99,7 +114,6 @@ Main.Size = UDim2.fromOffset(380,520)
 Main.Position = UDim2.new(0.5,-190,0.5,-260)
 Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Main.BorderSizePixel = 0
-Main.Visible = false
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 
 ------------------------
@@ -108,7 +122,7 @@ Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
 Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB"
+Header.Text = "NZ MULTI HUB v1.3"
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 20
 Header.TextColor3 = Color3.fromRGB(170,120,255)
@@ -120,7 +134,6 @@ Instance.new("UICorner",Header).CornerRadius = UDim.new(0,26)
 local Holder = Instance.new("ScrollingFrame",Main)
 Holder.Position = UDim2.new(0,16,0,72)
 Holder.Size = UDim2.new(1,-32,1,-100)
-Holder.CanvasSize = UDim2.new()
 Holder.ScrollBarThickness = 4
 Holder.BackgroundTransparency = 1
 
@@ -132,7 +145,7 @@ Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 ------------------------
--- BUTTON CREATOR
+-- BUTTON
 ------------------------
 local function Button(text, callback)
     local btn = Instance.new("TextButton",Holder)
@@ -151,7 +164,7 @@ local function Button(text, callback)
 end
 
 ------------------------
--- CLEAR MENU
+-- CLEAR
 ------------------------
 local function Clear()
     for _,v in ipairs(Holder:GetChildren()) do
@@ -162,6 +175,12 @@ local function Clear()
 end
 
 ------------------------
+-- TOGGLE KEY SYSTEM
+------------------------
+local toggleKey = Enum.KeyCode.Z
+local waitingKey = false
+
+------------------------
 -- MAIN MENU
 ------------------------
 local function MainMenu()
@@ -169,23 +188,11 @@ local function MainMenu()
 
     Button("🥊 Ultimate Battlegrounds", function()
         if not CheckGame(PLACE_IDS.UBG,"Ultimate Battlegrounds") then return end
-        Splash("Ultimate Battlegrounds",1)
-
-        Clear()
-        Button("🕺 Emotes", function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
-        end)
-
-        Button("⚔️ Kill Aura", function()
-            loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
-        end)
-
-        Button("⬅️ Back", MainMenu)
+        loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
     end)
 
     Button("💪 The Strongest Battlegrounds", function()
         if not CheckGame(PLACE_IDS.TSB,"The Strongest Battlegrounds") then return end
-        Splash("Loading TSB...",1)
         loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/TSB-NZ/refs/heads/main/tsb.lua"))()
     end)
 
@@ -199,23 +206,34 @@ local function MainMenu()
         loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
     end)
 
-    Button("🌐 Universal", function()
-        Clear()
-        Button("♾️ Infinite Yield", function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-        end)
-        Button("⬅️ Back", MainMenu)
+    Button("⌨️ Change Toggle Key", function()
+        waitingKey = true
+        Splash("Press any key...",1)
     end)
 end
 
+------------------------
+-- START
+------------------------
+task.wait(2.5)
 MainMenu()
+Main.Visible = true
+Shadow.Visible = true
 
 ------------------------
--- TOGGLE KEY
+-- INPUT
 ------------------------
 UIS.InputBegan:Connect(function(input,gp)
     if gp then return end
-    if input.KeyCode == Enum.KeyCode.Z then
+
+    if waitingKey then
+        toggleKey = input.KeyCode
+        waitingKey = false
+        Splash("Toggle Key: "..toggleKey.Name,1.2)
+        return
+    end
+
+    if input.KeyCode == toggleKey then
         Main.Visible = not Main.Visible
         Shadow.Visible = Main.Visible
     end
