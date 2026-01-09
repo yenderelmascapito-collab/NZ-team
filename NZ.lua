@@ -1,18 +1,20 @@
---// NZ MULTI HUB v2.1 FIXED
+--// NZ MULTI GAME HUB v2.0
+--// All-in-One | Fixed Menus | No Auto Exec
 
 ------------------------
 -- ANTI DOUBLE EXEC
 ------------------------
 if getgenv().NZ_MULTI_HUB then return end
 getgenv().NZ_MULTI_HUB = true
+getgenv().IY_LOADED = false
 
 ------------------------
 -- SERVICES
 ------------------------
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
 local LP = Players.LocalPlayer
 
@@ -40,6 +42,7 @@ end)
 ------------------------
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "NZ_MULTI_HUB"
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 
 ------------------------
@@ -51,12 +54,12 @@ Blur.Size = 0
 ------------------------
 -- SPLASH
 ------------------------
-local function Splash(txt,time)
+local function Splash(text,time)
     local l = Instance.new("TextLabel",ScreenGui)
     l.Size = UDim2.new(1,0,0,60)
     l.Position = UDim2.new(0,0,0.45,0)
     l.BackgroundTransparency = 1
-    l.Text = txt
+    l.Text = text
     l.Font = Enum.Font.GothamBold
     l.TextSize = 32
     l.TextTransparency = 1
@@ -78,24 +81,48 @@ local function Splash(txt,time)
 end
 
 ------------------------
--- MAIN FRAME
+-- FRAME
 ------------------------
 local Main = Instance.new("Frame",ScreenGui)
 Main.Size = UDim2.fromOffset(380,520)
 Main.Position = UDim2.new(.5,-190,.5,-260)
 Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Main.BorderSizePixel = 0
-Main.Visible = false
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
 Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB"
+Header.Text = "NZ MULTI HUB v2.0"
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 20
 Header.TextColor3 = Color3.fromRGB(170,120,255)
 Instance.new("UICorner",Header).CornerRadius = UDim.new(0,26)
+
+------------------------
+-- DRAG
+------------------------
+do
+    local dragging, dragStart, startPos
+    Header.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = i.Position
+            startPos = Main.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local d = i.Position - dragStart
+            Main.Position = startPos + UDim2.fromOffset(d.X,d.Y)
+        end
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
 
 ------------------------
 -- HOLDER
@@ -129,63 +156,112 @@ local function Button(txt,cb)
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 14
     b.TextColor3 = Color3.fromRGB(235,235,235)
+    b.BorderSizePixel = 0
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
     b.MouseButton1Click:Connect(cb)
 end
 
 local function Rejoin()
-    TeleportService:Teleport(game.PlaceId, LP)
+    TeleportService:Teleport(game.PlaceId,LP)
 end
 
 ------------------------
--- TSB MENU (INTEGRADO)
+-- MENUS
 ------------------------
+local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, UniversalMenu
+
+function UniversalMenu()
+    Clear()
+    Button("♾️ Infinite Yield",function()
+        if getgenv().IY_LOADED then return end
+        getgenv().IY_LOADED = true
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    end)
+    Button("🔄 Rejoin",Rejoin)
+    Button("⬅️ Back",MainMenu)
+end
+
+function UBGMenu()
+    Clear()
+    Button("🔥 Kill Aura",function()
+        loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+    end)
+    Button("🎭 Emotes",function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+    end)
+    Button("❓ Unknown",function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+    end)
+    Button("⬅️ Back",MainMenu)
+end
+
 function TSBMenu()
     Clear()
-
-    Button("🛡️ AUTO BLOCK", function()
+    Button("🛡️ AUTO BLOCK",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
     end)
-
-    Button("⚡ AUTO TECHS V2", function()
+    Button("⚡ AUTO TECHS V2",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
     end)
-
-    Button("➡️ SIDE DASH ASSIST", function()
+    Button("➡️ SIDE DASH ASSIST",function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
     end)
-
-    Button("🔁 M1 RESET", function()
+    Button("🔁 M1 RESET",function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
     end)
-
-    Button("🔥 SUPA TECH", function()
+    Button("🔥 SUPA TECH",function()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
     end)
-
-    Button("🐱 MEOW TECH", function()
+    Button("🐱 MEOW TECH",function()
         loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
     end)
-
-    Button("🔄 Rejoin", Rejoin)
-    Button("⬅ Back", MainMenu)
+    Button("⬅️ Back",MainMenu)
 end
 
-------------------------
--- MAIN MENU
-------------------------
+function VILMenu()
+    Clear()
+    Button("🩸 NZ PvP Team",function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
+    end)
+    Button("⬅️ Back",MainMenu)
+end
+
+function BBZMenu()
+    Clear()
+    Button("🏀 BBZ NZ",function()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
+    end)
+    Button("⬅️ Back",MainMenu)
+end
+
 function MainMenu()
     Clear()
 
-    Button("💪 The Strongest Battlegrounds", function()
-        if game.PlaceId == PLACE_IDS.TSB then
-            TSBMenu()
-        else
-            TeleportService:Teleport(PLACE_IDS.TSB, LP)
-        end
+    Button("🥊 Ultimate Battlegrounds",function()
+        if game.PlaceId ~= PLACE_IDS.UBG then
+            TeleportService:Teleport(PLACE_IDS.UBG,LP)
+        else UBGMenu() end
     end)
 
-    Button("🔄 Rejoin", Rejoin)
+    Button("💪 The Strongest Battlegrounds",function()
+        if game.PlaceId ~= PLACE_IDS.TSB then
+            TeleportService:Teleport(PLACE_IDS.TSB,LP)
+        else TSBMenu() end
+    end)
+
+    Button("🦸 Project Viltrumites",function()
+        if game.PlaceId ~= PLACE_IDS.VILTRUM then
+            TeleportService:Teleport(PLACE_IDS.VILTRUM,LP)
+        else VILMenu() end
+    end)
+
+    Button("🏀 Basketball Zero",function()
+        if game.PlaceId ~= PLACE_IDS.BBZ then
+            TeleportService:Teleport(PLACE_IDS.BBZ,LP)
+        else BBZMenu() end
+    end)
+
+    Button("🌐 Universal Scripts",UniversalMenu)
 end
 
 ------------------------
@@ -194,7 +270,6 @@ end
 task.spawn(function()
     Splash("NZ MULTI HUB",1.2)
     Splash("by NZ Team",1)
-    Main.Visible = true
     MainMenu()
 end)
 
