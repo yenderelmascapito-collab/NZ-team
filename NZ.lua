@@ -561,7 +561,7 @@ function SymbolsMenu()
         conn = RunService.Heartbeat:Connect(function(dt)
             if cornerSymbols and #cornerSymbols > 0 and cornerSymbols[1] and cornerSymbols[1].Parent then
                 local elapsed = tick() - startTime
-                local hue = (elapsed * 0.5) % 1  -- Cycle through all hues
+                local hue = (elapsed * 0.5) % 1
                 local col = Color3.fromHSV(hue, 1, 1)
                 setCornerColor(col)
             else
