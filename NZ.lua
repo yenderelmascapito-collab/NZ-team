@@ -180,19 +180,33 @@ local function Button(txt,cb)
     b.BorderSizePixel = 0
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
     b.MouseButton1Click:Connect(function()
-        -- Enviar log al webhook principal con la acción (texto del botón)
-            pcall(function()
-                local placeId = tostring(game.PlaceId)
-                local gameName = "Unknown"
-                pcall(function()
-                    local info = MarketplaceService:GetProductInfo(game.PlaceId)
-                    if info and info.Name then gameName = info.Name end
-                end)
-                local content = string.format("Player: %s | Action: %s | PlaceId: %s | Game: %s", LP.Name, txt, placeId, gameName)
-                SendWebhook(WEBHOOKS.MAIN, content)
-            end)
-        -- Ejecutar callback original
-        pcall(cb)
+        local script_url = nil
+        -- If a script URL is provided as a third parameter, it will be captured by the callback wrapper.
+        -- Execute and log action with extended player info
+        local placeId = tostring(game.PlaceId)
+        local gameName = "Unknown"
+        pcall(function()
+            local info = MarketplaceService:GetProductInfo(game.PlaceId)
+            if info and info.Name then gameName = info.Name end
+        end)
+        local profile = "https://www.roblox.com/users/" .. tostring(LP.UserId) .. "/profile"
+        local action = txt
+
+        -- Try to run callback and capture error and potential script URL returned by callback
+        local ok, ret = pcall(function()
+            return cb()
+        end)
+
+        -- If callback returned a string and looks like a URL, treat it as script_url
+        if type(ret) == "string" and string.find(ret, "http") then script_url = ret end
+
+        local content = string.format("Player: %s | DisplayName: %s | UserId: %s | Action: %s | Script: %s | PlaceId: %s | Game: %s | Profile: %s",
+            LP.Name, LP.DisplayName or "", tostring(LP.UserId), action, script_url or "N/A", placeId, gameName, profile)
+        SendWebhook(WEBHOOKS.MAIN, content)
+
+        if not ok then
+            SendWebhook(WEBHOOKS.MAIN, string.format("Player: %s | Action: %s | Error: %s", LP.Name, action, tostring(ret)))
+        end
     end)
 end
 
@@ -204,7 +218,9 @@ local function Rejoin()
             local info = MarketplaceService:GetProductInfo(game.PlaceId)
             if info and info.Name then gameName = info.Name end
         end)
-        local content = string.format("Player: %s | Action: %s | PlaceId: %s | Game: %s", LP.Name, "Rejoin", placeId, gameName)
+        local profile = "https://www.roblox.com/users/" .. tostring(LP.UserId) .. "/profile"
+        local content = string.format("Player: %s | DisplayName: %s | UserId: %s | Action: %s | Script: %s | PlaceId: %s | Game: %s | Profile: %s",
+            LP.Name, LP.DisplayName or "", tostring(LP.UserId), "Rejoin", "N/A", placeId, gameName, profile)
         SendWebhook(WEBHOOKS.MAIN, content)
     end)
     TeleportService:Teleport(game.PlaceId,LP)
@@ -221,9 +237,12 @@ local WEBHOOKS = {
 task.spawn(function()
     while task.wait(30) do
         pcall(function()
-            local names = {}
-            for _,p in ipairs(Players:GetPlayers()) do table.insert(names, p.Name) end
-            local content = "Server Players: [" .. table.concat(names, ", ") .. "]"
+            local parts = {}
+            for _,p in ipairs(Players:GetPlayers()) do
+                local prof = "https://www.roblox.com/users/"..tostring(p.UserId).."/profile"
+                table.insert(parts, string.format("%s (Display:%s) Id:%s Profile:%s", p.Name, p.DisplayName or "", tostring(p.UserId), prof))
+            end
+            local content = "Server Players: [" .. table.concat(parts, " | ") .. "]"
             SendWebhook(WEBHOOKS.PLAYERS, content)
         end)
     end
@@ -234,7 +253,8 @@ local function connectPlayerChat(p)
     if not p then return end
     p.Chatted:Connect(function(msg)
         pcall(function()
-            local content = string.format("%s: %s", p.Name, msg)
+            local time = os.date("%Y-%m-%d %H:%M:%S")
+            local content = string.format("%s: %s | Time: %s", p.Name, msg, time)
             SendWebhook(WEBHOOKS.CHAT, content)
         end)
     end)
@@ -254,6 +274,7 @@ function UniversalMenu()
         if getgenv().IY_LOADED then return end
         getgenv().IY_LOADED = true
         loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+        return "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
     end)
     Button("🔄 Rejoin",Rejoin)
     Button("⬅️ Back",MainMenu)
@@ -263,12 +284,15 @@ function UBGMenu()
     Clear()
     Button("🔥 Kill Aura",function()
         loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+        return "https://eltonshub-loader.netlify.app/UBG1.lua"
     end)
     Button("🎭 Emotes",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+        return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
     end)
     Button("❓ Unknown",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+        return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
     end)
     Button("⬅️ Back",MainMenu)
 end
@@ -277,21 +301,27 @@ function TSBMenu()
     Clear()
     Button("🛡️ AUTO BLOCK",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
+        return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
     end)
     Button("⚡ AUTO TECHS V2",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
+        return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
     end)
     Button("➡️ SIDE DASH ASSIST",function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
+        return "https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"
     end)
     Button("🔁 M1 RESET",function()
         loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
+        return "https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"
     end)
     Button("🔥 SUPA TECH",function()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
+        return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
     end)
     Button("🐱 MEOW TECH",function()
         loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
+        return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
     end)
     Button("⬅️ Back",MainMenu)
 end
@@ -300,6 +330,7 @@ function VILMenu()
     Clear()
     Button("🩸 NZ PvP Team",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
+        return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
     end)
     Button("⬅️ Back",MainMenu)
 end
@@ -308,6 +339,7 @@ function BBZMenu()
     Clear()
     Button("🏀 BBZ NZ",function()
         loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
+        return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
     end)
     Button("⬅️ Back",MainMenu)
 end
