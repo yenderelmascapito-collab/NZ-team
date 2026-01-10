@@ -554,7 +554,7 @@ function SymbolsMenu()
     Button("⚫ Negro",function()
         setCornerColor(Color3.fromRGB(20,20,20))
     end)
-    Button("🎨 RGB Custom",function()
+    Button("🎨 RGB",function()
         -- Simple RGB prompt
         local prompt = Instance.new("Frame", ScreenGui)
         prompt.Size = UDim2.new(0,260,0,140)
