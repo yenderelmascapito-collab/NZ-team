@@ -237,14 +237,20 @@ local function acceptKey()
     
     -- Show welcome messages and then start the hub
     task.spawn(function()
-        Splash("Bienvenido " .. displayName, 1.5)
-        task.wait(1.6)
-        Splash("La key expira en " .. expirationDate, 1.5)
-        task.wait(1.6)
+        local welcomeMsg = "Bienvenido " .. tostring(displayName)
+        Splash(welcomeMsg, 1.5)
+        task.wait(2)
+        
+        local expirationMsg = "La key expira en " .. tostring(expirationDate)
+        Splash(expirationMsg, 1.5)
+        task.wait(2)
+        
         Splash("NZ MULTI HUB", 1.2)
-        task.wait(1.3)
+        task.wait(1.7)
+        
         Splash("by NZ Team", 1)
-        task.wait(1.1)
+        task.wait(1.5)
+        
         Main.Visible = true
         MainMenu()
     end)
