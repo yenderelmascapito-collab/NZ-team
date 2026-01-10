@@ -303,12 +303,17 @@ local Holder = Instance.new("ScrollingFrame",Main)
 Holder.Position = UDim2.new(0,16,0,72)
 Holder.Size = UDim2.new(1,-32,1,-90)
 Holder.ScrollBarThickness = 4
-Holder.BackgroundTransparency = 0
-Holder.BackgroundColor3 = Color3.fromRGB(10,10,14)
+Holder.BackgroundTransparency = 1
 Holder.BorderSizePixel = 0
+Holder.CanvasSize = UDim2.new(0,0,0,0)
+Holder.ClipsDescendants = true
 
 local Layout = Instance.new("UIListLayout",Holder)
 Layout.Padding = UDim.new(0,12)
+Layout.FillDirection = Enum.FillDirection.Vertical
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+Layout.VerticalAlignment = Enum.VerticalAlignment.Top
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
 Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Holder.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y+10)
 end)
@@ -324,13 +329,14 @@ end
 
 local function Button(txt,cb)
     local b = Instance.new("TextButton",Holder)
-    b.Size = UDim2.new(1,0,0,44)
-    b.BackgroundColor3 = Color3.fromRGB(40,40,60)
+    b.Size = UDim2.new(1,-8,0,44)
+    b.BackgroundColor3 = Color3.fromRGB(60,50,120)
     b.Text = txt
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 14
-    b.TextColor3 = Color3.fromRGB(235,235,235)
+    b.TextColor3 = Color3.fromRGB(255,255,255)
     b.BorderSizePixel = 0
+    b.LayoutOrder = Layout:FindFirstChildOfClass("UIListLayout") and (#Holder:GetChildren() + 1) or 0
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
     b.MouseButton1Click:Connect(function()
         local script_url = nil
