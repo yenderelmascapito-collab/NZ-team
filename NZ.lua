@@ -28,14 +28,51 @@ local WEBHOOKS = {
 }
 
 local function SendWebhook(url, content)
-    if not HttpService.HttpEnabled then
-        -- Mostrar aviso breve si HTTP está deshabilitado
-        task.spawn(function() Splash("HTTP disabled: webhooks not sent",1.2) end)
-        return
+    local payload = {content = content}
+
+    -- Try HttpService first (requires HttpEnabled)
+    if HttpService and HttpService.HttpEnabled then
+        local ok = pcall(function()
+            HttpService:PostAsync(url, HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
+        end)
+        if ok then return true end
     end
-    pcall(function()
-        HttpService:PostAsync(url, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
-    end)
+
+    -- Fallbacks for various executors: syn.request, request, http_request
+    local encoded = HttpService:JSONEncode(payload)
+
+    if type(syn) == "table" and type(syn.request) == "function" then
+        pcall(function()
+            syn.request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
+        end)
+        return true
+    end
+
+    if type(request) == "function" then
+        pcall(function()
+            request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
+        end)
+        return true
+    end
+
+    if type(http_request) == "function" then
+        pcall(function()
+            http_request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
+        end)
+        return true
+    end
+
+    -- Last attempt: some environments expose an 'http' table with request
+    if type(http) == "table" and type(http.request) == "function" then
+        pcall(function()
+            http.request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
+        end)
+        return true
+    end
+
+    -- If none worked, notify user via splash
+    task.spawn(function() Splash("HTTP disabled: webhooks not sent",1.2) end)
+    return false
 end
 
 ------------------------
