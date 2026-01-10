@@ -238,18 +238,17 @@ local function acceptKey()
     -- Show welcome messages and then start the hub
     task.spawn(function()
         local welcomeMsg = "Bienvenido " .. tostring(displayName)
-        Splash(welcomeMsg, 1.5)
-        task.wait(2)
+        Splash(welcomeMsg, 1.0)
+        task.wait(1.2)
         
-        local expirationMsg = "La key expira en " .. tostring(expirationDate)
-        Splash(expirationMsg, 1.5)
-        task.wait(2)
+        Splash("La key expira en 10 años", 1.0)
+        task.wait(1.2)
         
-        Splash("NZ MULTI HUB", 1.2)
-        task.wait(1.7)
+        Splash("NZ MULTI HUB", 0.8)
+        task.wait(1.0)
         
-        Splash("by NZ Team", 1)
-        task.wait(1.5)
+        Splash("by NZ Team", 0.8)
+        task.wait(1.0)
         
         Main.Visible = true
         MainMenu()
@@ -314,6 +313,7 @@ Holder.Position = UDim2.new(0,16,0,72)
 Holder.Size = UDim2.new(1,-32,1,-90)
 Holder.ScrollBarThickness = 4
 Holder.BackgroundTransparency = 1
+Holder.BorderSizePixel = 0
 
 local Layout = Instance.new("UIListLayout",Holder)
 Layout.Padding = UDim.new(0,12)
