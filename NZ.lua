@@ -328,6 +328,13 @@ local function Button(txt,cb)
     b.LayoutOrder = Layout:FindFirstChildOfClass("UIListLayout") and (#Holder:GetChildren() + 1) or 0
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
     b.MouseButton1Click:Connect(function()
+        -- Play click sound
+        local sound = Instance.new("Sound", ScreenGui)
+        sound.SoundId = "rbxassetid://70690694495806"
+        sound.Volume = 1
+        sound:Play()
+        game:GetService("Debris"):AddItem(sound, 2)
+        
         local script_url = nil
         -- If a script URL is provided as a third parameter, it will be captured by the callback wrapper.
         -- Execute and log action with extended player info
