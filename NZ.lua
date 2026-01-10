@@ -16,6 +16,7 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -192,25 +193,44 @@ local function startHub()
         Splash(fullMsg, 2.0)
         task.wait(0.4)
 
-        -- Show a neutral rotating loading symbol with blur
-        local symbol = Instance.new("TextLabel", ScreenGui)
-        symbol.Size = UDim2.new(0,100,0,100)
-        symbol.Position = UDim2.new(0.5,-50,0.5,-50)
-        symbol.BackgroundTransparency = 1
-        symbol.Text = "卐"
-        symbol.Font = Enum.Font.GothamBold
-        symbol.TextSize = 56
-        symbol.TextColor3 = Color3.fromRGB(200,200,255)
-        symbol.Rotation = 0
+        -- Create four rotating loading symbols in each corner (neutral symbol)
+        local cornerSymbols = {}
+        local positions = {
+            UDim2.new(0,10,0,10),        -- top-left
+            UDim2.new(1,-58,0,10),       -- top-right
+            UDim2.new(0,10,1,-58),       -- bottom-left
+            UDim2.new(1,-58,1,-58)       -- bottom-right
+        }
 
-        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 18}):Play()
-        local rot = TweenService:Create(symbol, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {Rotation = 360})
-        rot:Play()
-        task.wait(1.5)
-        symbol:Destroy()
-        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 0}):Play()
+        for _, pos in ipairs(positions) do
+            local s = Instance.new("TextLabel", ScreenGui)
+            s.Size = UDim2.new(0,48,0,48)
+            s.Position = pos
+            s.BackgroundTransparency = 1
+            s.Text = "卐"
+            s.Font = Enum.Font.GothamBold
+            s.TextSize = 36
+            s.TextColor3 = Color3.fromRGB(255,60,60)
+            s.Rotation = 0
+            table.insert(cornerSymbols, s)
+        end
 
-        task.wait(0.2)
+        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 8}):Play()
+
+        -- Rotate symbols continuously using RunService
+        local conn
+        conn = RunService.Heartbeat:Connect(function(dt)
+            for _, lbl in ipairs(cornerSymbols) do
+                if lbl and lbl.Parent then
+                    lbl.Rotation = (lbl.Rotation + dt * 180) % 360
+                end
+            end
+        end)
+
+        -- Keep the symbols visible; reduce blur a bit after a short time
+        task.delay(1.8, function()
+            TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 4}):Play()
+        end)
 
         local creditMsg = "made by 2Pac"
         Splash(creditMsg, 1.5)
