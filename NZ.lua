@@ -28,19 +28,38 @@ local WEBHOOKS = {
 }
 
 local function SendWebhook(url, content)
-    local payload = {content = content}
+    -- Support either a plain content string or an embed/table with fields
+    local payload
+    if type(content) == "string" then
+        payload = {content = content}
+    elseif type(content) == "table" then
+        -- If already structured as full webhook payload, use it
+        if content.embeds or content.username or content.content then
+            payload = content
+        else
+            -- Build a standard embed payload from fields
+            local embed = {
+                title = content.title or "NZ HUB LOG",
+                color = content.color or 0x9b59ff,
+                fields = content.fields or {}
+            }
+            payload = {username = content.username or "NZ Multi Hub", embeds = {embed}}
+        end
+    else
+        payload = {content = tostring(content)}
+    end
 
+    local ok, err
     -- Try HttpService first (requires HttpEnabled)
     if HttpService and HttpService.HttpEnabled then
-        local ok = pcall(function()
+        ok, err = pcall(function()
             HttpService:PostAsync(url, HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
         end)
         if ok then return true end
     end
 
-    -- Fallbacks for various executors: syn.request, request, http_request
     local encoded = HttpService:JSONEncode(payload)
-
+    -- Fallbacks for various executors: syn.request, request, http_request, http.request
     if type(syn) == "table" and type(syn.request) == "function" then
         pcall(function()
             syn.request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
@@ -62,7 +81,6 @@ local function SendWebhook(url, content)
         return true
     end
 
-    -- Last attempt: some environments expose an 'http' table with request
     if type(http) == "table" and type(http.request) == "function" then
         pcall(function()
             http.request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
@@ -70,7 +88,6 @@ local function SendWebhook(url, content)
         return true
     end
 
-    -- If none worked, notify user via splash
     task.spawn(function() Splash("HTTP disabled: webhooks not sent",1.2) end)
     return false
 end
@@ -147,6 +164,84 @@ Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Main.BorderSizePixel = 0
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 Main.Visible = false
+
+-- KEY UI
+local KEY = "NZteam"
+local KeyFrame = Instance.new("Frame", ScreenGui)
+KeyFrame.Size = UDim2.fromOffset(360,180)
+KeyFrame.Position = UDim2.new(0.5,-180,0.5,-90)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(25,25,35)
+KeyFrame.BorderSizePixel = 0
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,18)
+
+local KeyTitle = Instance.new("TextLabel", KeyFrame)
+KeyTitle.Size = UDim2.new(1,0,0,48)
+KeyTitle.Position = UDim2.new(0,0,0,8)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "NZ Multi Hub — Enter Key"
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.TextSize = 20
+KeyTitle.TextColor3 = Color3.fromRGB(190,180,255)
+
+local KeyBox = Instance.new("TextBox", KeyFrame)
+KeyBox.Size = UDim2.new(1,-40,0,40)
+KeyBox.Position = UDim2.new(0,20,0,64)
+KeyBox.PlaceholderText = "Enter key..."
+KeyBox.Text = ""
+KeyBox.ClearTextOnFocus = false
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 16
+KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner",KeyBox).CornerRadius = UDim.new(0,12)
+
+local KeyBtn = Instance.new("TextButton", KeyFrame)
+KeyBtn.Size = UDim2.new(1,-40,0,40)
+KeyBtn.Position = UDim2.new(0,20,1,-52)
+KeyBtn.Text = "Unlock"
+KeyBtn.Font = Enum.Font.GothamBold
+KeyBtn.TextSize = 18
+KeyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+KeyBtn.BackgroundColor3 = Color3.fromRGB(80,40,200)
+Instance.new("UICorner",KeyBtn).CornerRadius = UDim.new(0,12)
+
+local KeyMessage = Instance.new("TextLabel", KeyFrame)
+KeyMessage.Size = UDim2.new(1,-40,0,22)
+KeyMessage.Position = UDim2.new(0,20,0,112)
+KeyMessage.BackgroundTransparency = 1
+KeyMessage.Text = ""
+KeyMessage.Font = Enum.Font.Gotham
+KeyMessage.TextSize = 14
+KeyMessage.TextColor3 = Color3.fromRGB(200,200,200)
+
+local function acceptKey()
+    KeyFrame:Destroy()
+    local fields = {
+        {name = "👤 Player", value = LP.Name, inline = true},
+        {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
+        {name = "🔗 Profile", value = "https://www.roblox.com/users/"..tostring(LP.UserId).."/profile", inline = false},
+        {name = "⚙️ Action", value = "Key Accepted", inline = true},
+        {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
+    }
+    SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
+    getgenv().IY_LOADED = true
+end
+
+KeyBtn.MouseButton1Click:Connect(function()
+    if KeyBox.Text == KEY then
+        acceptKey()
+    else
+        KeyMessage.Text = "Wrong key"
+        KeyMessage.TextColor3 = Color3.fromRGB(255,100,100)
+    end
+end)
+
+-- allow Enter key to submit
+KeyBox.FocusLost:Connect(function(enter)
+    if enter and KeyBox.Text == KEY then
+        acceptKey()
+    end
+end)
 
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
@@ -237,12 +332,20 @@ local function Button(txt,cb)
         -- If callback returned a string and looks like a URL, treat it as script_url
         if type(ret) == "string" and string.find(ret, "http") then script_url = ret end
 
-        local content = string.format("Player: %s | DisplayName: %s | UserId: %s | Action: %s | Script: %s | PlaceId: %s | Game: %s | Profile: %s",
-            LP.Name, LP.DisplayName or "", tostring(LP.UserId), action, script_url or "N/A", placeId, gameName, profile)
-        SendWebhook(WEBHOOKS.MAIN, content)
+        local fields = {
+            {name = "👤 Player", value = LP.Name, inline = true},
+            {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
+            {name = "🔗 Profile", value = profile, inline = false},
+            {name = "🎮 Game", value = gameName, inline = true},
+            {name = "🕹️ PlaceId", value = placeId, inline = true},
+            {name = "⚙️ Action", value = action, inline = true},
+            {name = "🔗 Script", value = script_url or "N/A", inline = false},
+            {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
+        }
+        SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
 
         if not ok then
-            SendWebhook(WEBHOOKS.MAIN, string.format("Player: %s | Action: %s | Error: %s", LP.Name, action, tostring(ret)))
+            SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB ERROR", color = 0xff0000, fields = {{name = "👤 Player", value = LP.Name}, {name = "⚠️ Error", value = tostring(ret), inline = false}}})
         end
     end)
 end
@@ -256,9 +359,16 @@ local function Rejoin()
             if info and info.Name then gameName = info.Name end
         end)
         local profile = "https://www.roblox.com/users/" .. tostring(LP.UserId) .. "/profile"
-        local content = string.format("Player: %s | DisplayName: %s | UserId: %s | Action: %s | Script: %s | PlaceId: %s | Game: %s | Profile: %s",
-            LP.Name, LP.DisplayName or "", tostring(LP.UserId), "Rejoin", "N/A", placeId, gameName, profile)
-        SendWebhook(WEBHOOKS.MAIN, content)
+        local fields = {
+            {name = "👤 Player", value = LP.Name, inline = true},
+            {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
+            {name = "🔗 Profile", value = profile, inline = false},
+            {name = "🎮 Game", value = gameName, inline = true},
+            {name = "🕹️ PlaceId", value = placeId, inline = true},
+            {name = "⚙️ Action", value = "Rejoin", inline = true},
+            {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
+        }
+        SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     end)
     TeleportService:Teleport(game.PlaceId,LP)
 end
@@ -279,8 +389,12 @@ task.spawn(function()
                 local prof = "https://www.roblox.com/users/"..tostring(p.UserId).."/profile"
                 table.insert(parts, string.format("%s (Display:%s) Id:%s Profile:%s", p.Name, p.DisplayName or "", tostring(p.UserId), prof))
             end
-            local content = "Server Players: [" .. table.concat(parts, " | ") .. "]"
-            SendWebhook(WEBHOOKS.PLAYERS, content)
+            local fields = {
+                {name = "Players", value = table.concat(parts, " | "), inline = false},
+                {name = "Count", value = tostring(#parts), inline = true},
+                {name = "Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
+            }
+            SendWebhook(WEBHOOKS.PLAYERS, {title = "Server Players", color = 0x2ecc71, fields = fields})
         end)
     end
 end)
@@ -291,8 +405,12 @@ local function connectPlayerChat(p)
     p.Chatted:Connect(function(msg)
         pcall(function()
             local time = os.date("%Y-%m-%d %H:%M:%S")
-            local content = string.format("%s: %s | Time: %s", p.Name, msg, time)
-            SendWebhook(WEBHOOKS.CHAT, content)
+            local fields = {
+                {name = "Player", value = p.Name, inline = true},
+                {name = "Message", value = msg, inline = false},
+                {name = "Time", value = time, inline = true}
+            }
+            SendWebhook(WEBHOOKS.CHAT, {title = "Chat Message", color = 0x3498db, fields = fields})
         end)
     end)
 end
@@ -323,6 +441,7 @@ function UBGMenu()
         loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
         return "https://eltonshub-loader.netlify.app/UBG1.lua"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("🎭 Emotes",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
         return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
@@ -340,6 +459,7 @@ function TSBMenu()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
         return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("⚡ AUTO TECHS V2",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
         return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
@@ -369,6 +489,7 @@ function VILMenu()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
         return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("⬅️ Back",MainMenu)
 end
 
@@ -378,6 +499,7 @@ function BBZMenu()
         loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
         return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
     end)
+    Button("🔄 Rejoin",Rejoin)
     Button("⬅️ Back",MainMenu)
 end
 
