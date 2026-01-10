@@ -511,6 +511,11 @@ function TSBMenu()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
         return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
     end)
+    Button("⌨️ Back dash cancel PC (E)",function()
+        getgenv().keybind = "E"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
+        return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
+    end)
     Button("🔥 SUPA TECH",function()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
         return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
