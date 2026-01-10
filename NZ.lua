@@ -7,6 +7,7 @@
 if getgenv().NZ_MULTI_HUB then return end
 getgenv().NZ_MULTI_HUB = true
 getgenv().IY_LOADED = false
+local SCRIPT_START = tick()
 
 ------------------------
 -- SERVICES
@@ -107,38 +108,69 @@ local PLACE_IDS = {
     VILTRUM = 113318245878384,
     RIVALS = 17625359962
 }
+------------------------
+-- UTILS
+------------------------
+local menuLoaded = false
+local cornerSymbols = {}
+local cornerSymbolsEnabled = true
+local EffectsGui = nil
+local Blur = nil
 
-------------------------
--- CLEAN
-------------------------
-pcall(function()
-    if game.CoreGui:FindFirstChild("NZ_MULTI_HUB") then
-        game.CoreGui.NZ_MULTI_HUB:Destroy()
+-- Helper to set color of corner symbols
+local function setCornerColor(col)
+    if type(col) ~= "userdata" then return end
+    for _, lbl in ipairs(cornerSymbols) do
+        if lbl and lbl.Parent then
+            lbl.TextColor3 = col
+        end
     end
-end)
+end
 
 ------------------------
--- GUI
+-- WINDUI + EFFECTS GUI
 ------------------------
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "NZ_MULTI_HUB"
-ScreenGui.IgnoreGuiInset = true
-ScreenGui.ResetOnSpawn = false
 
-------------------------
--- BLUR
-------------------------
-local Blur = Instance.new("BlurEffect", Lighting)
+-- Cargar WindUI (debe ejecutarse ANTES de crear tabs y botones)
+local WindUI = loadstring(game:HttpGet(
+  "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+local window = WindUI:CreateWindow({
+    Title = "NZ MULTI HUB v2.0",
+    Subtitle = "2Pac",
+    Icon = "🔥",
+    Theme = "Dark",
+    ToggleKey = Enum.KeyCode.Z
+})
+
+-- Crear TODOS los Tabs (orden fijo)
+local mainTab = window:Tab({Title="Main"})
+local gamesTab = window:Tab({Title="Games"})
+local universalTab = window:Tab({Title="Universal"})
+local symbolsTab = window:Tab({Title="Symbols"})
+local ubgTab = window:Tab({Title="Ultimate Battlegrounds"})
+local tsbTab = window:Tab({Title="TSB"})
+local vilTab = window:Tab({Title="Project Viltrumites"})
+local bbzTab = window:Tab({Title="BBZ"})
+local rivTab = window:Tab({Title="RIVALS"})
+-- UI tab removed by user request. Use defaults and Save/Load functions via code only.
+
+-- Effects GUI (solo para splash y corner symbols) — creado DESPUÉS de WindUI
+EffectsGui = Instance.new("ScreenGui", game.CoreGui)
+EffectsGui.Name = "NZ_MULTI_HUB_EFFECTS"
+EffectsGui.IgnoreGuiInset = true
+EffectsGui.ResetOnSpawn = false
+
+Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
 
--- Corner symbols table (global for menu control)
-local cornerSymbols = {}
-
-------------------------
--- SPLASH
-------------------------
+-- Compatibilidad mínima: Clear y Button no crean UI, evitan nils si se invocan menús antiguos
+local function Clear() end
+local function Button(dummyText, dummyCb) end
+-- Splash function usa EffectsGui
 local function Splash(text,time)
-    local l = Instance.new("TextLabel",ScreenGui)
+    local l = Instance.new("TextLabel",EffectsGui)
     l.Size = UDim2.new(1,0,0,60)
     l.Position = UDim2.new(0,0,0.45,0)
     l.BackgroundTransparency = 1
@@ -163,19 +195,6 @@ local function Splash(text,time)
     l:Destroy()
 end
 
-------------------------
--- FRAME
-------------------------
-local Main = Instance.new("Frame",ScreenGui)
-Main.Size = UDim2.fromOffset(380,520)
-Main.Position = UDim2.new(.5,-190,.5,-260)
-Main.BackgroundColor3 = Color3.fromRGB(10,10,14)
-Main.BorderSizePixel = 0
-Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
-Main.Visible = false
-
--- KEY UI - DISABLED
-
 local function startHub()
     local displayName = LP.DisplayName or LP.Name
     
@@ -192,9 +211,7 @@ local function startHub()
     
     -- Show welcome message
     task.spawn(function()
-        local fullMsg = "Bienvenido " .. tostring(displayName)
-        Splash(fullMsg, 2.0)
-        task.wait(0.4)
+        -- intro removed (no welcome splash)
 
         -- Create four rotating loading symbols in each corner (neutral symbol)
         cornerSymbols = {}
@@ -206,7 +223,8 @@ local function startHub()
         }
 
         for _, pos in ipairs(positions) do
-            local s = Instance.new("TextLabel", ScreenGui)
+            if not cornerSymbolsEnabled then break end
+            local s = Instance.new("TextLabel", EffectsGui)
             s.Size = UDim2.new(0,48,0,48)
             s.Position = pos
             s.BackgroundTransparency = 1
@@ -228,150 +246,122 @@ local function startHub()
             end
         end)
 
-        local creditMsg = "made by 2Pac"
-        Splash(creditMsg, 1.5)
-        task.wait(1.8)
+        -- intro removed (no credit splash)
 
         menuLoaded = false
-        Main.Visible = true
-        MainMenu()
+        -- No UI manual: WindUI ya está creada y los botones se generan abajo.
         menuLoaded = true
     end)
 end
 
-local Header = Instance.new("TextLabel",Main)
-Header.Size = UDim2.new(1,0,0,60)
-Header.BackgroundColor3 = Color3.fromRGB(18,18,28)
-Header.Text = "NZ MULTI HUB v2.0"
-Header.Font = Enum.Font.GothamBold
-Header.TextSize = 20
-Header.TextColor3 = Color3.fromRGB(170,120,255)
-Instance.new("UICorner",Header).CornerRadius = UDim.new(0,26)
+-- UI settings persistence
+local SETTINGS_FILE = "nz_ui_settings.json"
+local DEFAULT_UI_SETTINGS = {
+    transparency = 0.18,
+    accent = {r=170,g=120,b=255},
+    textColor = {r=255,g=255,b=255}
+}
+local UI_SETTINGS = DEFAULT_UI_SETTINGS
 
-------------------------
--- DRAG
-------------------------
-do
-    local dragging, dragStart, startPos
-    Header.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = i.Position
-            startPos = Main.Position
+local function try_writefile(name, data)
+    if type(writefile) == "function" then
+        pcall(writefile, name, data)
+        return true
+    end
+    return false
+end
+
+local function try_readfile(name)
+    if type(readfile) == "function" then
+        local ok, d = pcall(readfile, name)
+        if ok and d then return d end
+    end
+    return nil
+end
+
+local function SaveUISettings()
+    local ok, encoded = pcall(function() return HttpService:JSONEncode(UI_SETTINGS) end)
+    if ok and encoded then
+        if not try_writefile(SETTINGS_FILE, encoded) then
+            getgenv().NZ_UI_SETTINGS = UI_SETTINGS
         end
-    end)
-    UIS.InputChanged:Connect(function(i)
-        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-            local d = i.Position - dragStart
-            Main.Position = startPos + UDim2.fromOffset(d.X,d.Y)
-        end
-    end)
-    UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
+    end
+end
+
+local function LoadUISettings()
+    local data = try_readfile(SETTINGS_FILE)
+    if data then
+        local ok, decoded = pcall(function() return HttpService:JSONDecode(data) end)
+        if ok and type(decoded) == "table" then UI_SETTINGS = decoded return end
+    end
+    if type(getgenv().NZ_UI_SETTINGS) == "table" then UI_SETTINGS = getgenv().NZ_UI_SETTINGS end
+end
+
+LoadUISettings()
+
+-- Apply UI settings to WindUI (best-effort, non-breaking)
+local function ApplyUISettings()
+    pcall(function()
+        if window and UI_SETTINGS then
+            -- Try common property names
+            local t = UI_SETTINGS.transparency or 0.18
+            for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
+                if window[candidate] and typeof(window[candidate]) == "Instance" then
+                    pcall(function() window[candidate].BackgroundTransparency = t end)
+                end
+            end
+            -- Accent color
+            local acc = UI_SETTINGS.accent or {r=170,g=120,b=255}
+            local c3 = Color3.fromRGB(acc.r or 170, acc.g or 120, acc.b or 255)
+            pcall(function()
+                if window.SetAccentColor then window:SetAccentColor(c3) end
+                if window.UpdateTheme then window:UpdateTheme({Accent = c3}) end
+            end)
+            -- Text color
+            local tc = UI_SETTINGS.textColor or {r=255,g=255,b=255}
+            local c3t = Color3.fromRGB(tc.r or 255, tc.g or 255, tc.b or 255)
+            pcall(function()
+                if window.SetTextColor then window:SetTextColor(c3t) end
+                if window.UpdateTheme then window:UpdateTheme({TextColor = c3t}) end
+            end)
+            -- Also try to apply text color to common child instances
+            for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
+                if window[candidate] and typeof(window[candidate]) == "Instance" then
+                    pcall(function() if window[candidate].TextColor3 then window[candidate].TextColor3 = c3t end end)
+                end
+            end
         end
     end)
 end
 
-------------------------
--- HOLDER
-------------------------
-local Holder = Instance.new("ScrollingFrame",Main)
-Holder.Position = UDim2.new(0,16,0,72)
-Holder.Size = UDim2.new(1,-32,1,-90)
-Holder.ScrollBarThickness = 4
-Holder.BackgroundTransparency = 1
-Holder.BorderSizePixel = 0
-Holder.CanvasSize = UDim2.new(0,0,0,0)
-Holder.ClipsDescendants = true
+ApplyUISettings()
 
-local Layout = Instance.new("UIListLayout",Holder)
-Layout.Padding = UDim.new(0,12)
-Layout.FillDirection = Enum.FillDirection.Vertical
-Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-Layout.VerticalAlignment = Enum.VerticalAlignment.Top
-Layout.SortOrder = Enum.SortOrder.LayoutOrder
-Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    Holder.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y+10)
+-- Try to remove any existing WindUI tab named "UI" (best-effort, non-breaking)
+pcall(function()
+    -- Try common getters
+    if window.GetTabs then
+        for _, tab in ipairs(window:GetTabs() or {}) do
+            local ok, title = pcall(function() return tab.Title end)
+            if not ok then
+                pcall(function() title = tab:GetTitle() end)
+            end
+            if title == "UI" then
+                pcall(function() if tab.Destroy then tab:Destroy() elseif tab.Remove then tab:Remove() end end)
+            end
+        end
+    end
+    -- Try table fields
+    if window.Tabs and type(window.Tabs) == "table" then
+        for i = #window.Tabs,1,-1 do
+            local tab = window.Tabs[i]
+            local ok, title = pcall(function() return tab.Title end)
+            if not ok then pcall(function() title = tab:GetTitle() end) end
+            if title == "UI" then
+                pcall(function() if tab.Destroy then tab:Destroy() elseif tab.Remove then tab:Remove() end end)
+            end
+        end
+    end
 end)
-
-------------------------
--- UTILS
-------------------------
-local menuLoaded = false
-
--- Helper to set color of corner symbols
-local function setCornerColor(col)
-    if type(col) ~= "userdata" then return end
-    for _, lbl in ipairs(cornerSymbols) do
-        if lbl and lbl.Parent then
-            lbl.TextColor3 = col
-        end
-    end
-end
-
-local function Clear()
-    for _,v in ipairs(Holder:GetChildren()) do
-        if v:IsA("TextButton") then v:Destroy() end
-    end
-end
-
-local function Button(txt,cb)
-    local b = Instance.new("TextButton",Holder)
-    b.Size = UDim2.new(1,-8,0,44)
-    b.BackgroundColor3 = Color3.fromRGB(60,50,120)
-    b.Text = txt
-    b.Font = Enum.Font.GothamMedium
-    b.TextSize = 14
-    b.TextColor3 = Color3.fromRGB(255,255,255)
-    b.BorderSizePixel = 0
-    b.LayoutOrder = Layout:FindFirstChildOfClass("UIListLayout") and (#Holder:GetChildren() + 1) or 0
-    Instance.new("UICorner",b).CornerRadius = UDim.new(0,14)
-    b.MouseButton1Click:Connect(function()
-        -- Play click sound
-        local sound = Instance.new("Sound", ScreenGui)
-        sound.SoundId = "rbxassetid://70690694495806"
-        sound.Volume = 1
-        sound:Play()
-        game:GetService("Debris"):AddItem(sound, 2)
-        
-        local script_url = nil
-        -- If a script URL is provided as a third parameter, it will be captured by the callback wrapper.
-        -- Execute and log action with extended player info
-        local placeId = tostring(game.PlaceId)
-        local gameName = "Unknown"
-        pcall(function()
-            local info = MarketplaceService:GetProductInfo(game.PlaceId)
-            if info and info.Name then gameName = info.Name end
-        end)
-        local profile = "https://www.roblox.com/users/" .. tostring(LP.UserId) .. "/profile"
-        local action = txt
-
-        -- Try to run callback and capture error and potential script URL returned by callback
-        local ok, ret = pcall(function()
-            return cb()
-        end)
-
-        -- If callback returned a string and looks like a URL, treat it as script_url
-        if type(ret) == "string" and string.find(ret, "http") then script_url = ret end
-
-        local fields = {
-            {name = "👤 Player", value = LP.Name, inline = true},
-            {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
-            {name = "🔗 Profile", value = profile, inline = false},
-            {name = "🎮 Game", value = gameName, inline = true},
-            {name = "🕹️ PlaceId", value = placeId, inline = true},
-            {name = "⚙️ Action", value = action, inline = true},
-            {name = "🔗 Script", value = script_url or "N/A", inline = false},
-            {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
-        }
-        SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
-
-        if not ok then
-            SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB ERROR", color = 0xff0000, fields = {{name = "👤 Player", value = LP.Name}, {name = "⚠️ Error", value = tostring(ret), inline = false}}})
-        end
-    end)
-end
 
 local function Rejoin()
     pcall(function()
@@ -395,7 +385,6 @@ local function Rejoin()
     end)
     TeleportService:Teleport(game.PlaceId,LP)
 end
-
 -- Enviar lista de jugadores cada 30s al webhook PLAYERS
 task.spawn(function()
     while task.wait(30) do
@@ -469,15 +458,21 @@ end
 function UBGMenu()
     Clear()
     Button("🔥 Kill Aura",function()
-        loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+        RunIfInPlace(PLACE_IDS.UBG, function()
+            loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+        end, "Ultimate Battlegrounds")
         return "https://eltonshub-loader.netlify.app/UBG1.lua"
     end)
     Button("🎭 Emotes",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+        RunIfInPlace(PLACE_IDS.UBG, function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+        end, "Ultimate Battlegrounds")
         return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
     end)
     Button("❓ Unknown",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+        RunIfInPlace(PLACE_IDS.UBG, function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+        end, "Ultimate Battlegrounds")
         return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
     end)
     Button("🔄 Rejoin",Rejoin)
@@ -558,7 +553,9 @@ end
 function RIVMenu()
     Clear()
     Button("⚔️ Rivals v1",function()
-        loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+        RunIfInPlace(PLACE_IDS.RIV, function()
+            loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+        end, "RIVALS")
         return "https://pastefy.app/YiGY38uo/raw"
     end)
     Button("🔄 Rejoin",Rejoin)
@@ -596,6 +593,34 @@ function SymbolsMenu()
                 conn:Disconnect()
             end
         end)
+    end)
+    Button("🔁 Toggle Symbols",function()
+        cornerSymbolsEnabled = not cornerSymbolsEnabled
+        if cornerSymbolsEnabled then
+            -- recreate if empty
+            if not cornerSymbols or #cornerSymbols == 0 then
+                -- spawn simple recreate of corner symbols
+                local positions = {
+                    UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
+                }
+                for _, pos in ipairs(positions) do
+                    local s = Instance.new("TextLabel", EffectsGui)
+                    s.Size = UDim2.new(0,48,0,48)
+                    s.Position = pos
+                    s.BackgroundTransparency = 1
+                    s.Text = "卐"
+                    s.Font = Enum.Font.GothamBold
+                    s.TextSize = 36
+                    s.TextColor3 = Color3.fromRGB(255,60,60)
+                    s.Rotation = 0
+                    table.insert(cornerSymbols, s)
+                end
+            else
+                for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = true end end
+            end
+        else
+            for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = false end end
+        end
     end)
     Button("⬅️ Back",MainMenu)
 end
@@ -640,24 +665,190 @@ end
 ------------------------
 -- START
 ------------------------
+-- Crear TODOS los botones en los Tabs (usar WindUI API)
+-- Games tab: SOLO teletransportan
+gamesTab:Button({
+  Title = "🥊 Ultimate Battlegrounds",
+  Callback = function()
+    TeleportService:Teleport(PLACE_IDS.UBG, LP)
+  end
+})
+gamesTab:Button({
+  Title = "💪 The Strongest Battlegrounds",
+  Callback = function()
+    TeleportService:Teleport(PLACE_IDS.TSB, LP)
+  end
+})
+gamesTab:Button({
+  Title = "🦸 Project Viltrumites",
+  Callback = function()
+    TeleportService:Teleport(PLACE_IDS.VILTRUM, LP)
+  end
+})
+gamesTab:Button({
+  Title = "🏀 Basketball Zero",
+  Callback = function()
+    TeleportService:Teleport(PLACE_IDS.BBZ, LP)
+  end
+})
+gamesTab:Button({
+  Title = "⚔️ Rivals",
+  Callback = function()
+    TeleportService:Teleport(PLACE_IDS.RIVALS, LP)
+  end
+})
+
+-- Main tab (utility actions)
+mainTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+mainTab:Button({Title = "🔁 Start Hub", Callback = function() startHub() end})
+
+-- Universal tab
+universalTab:Button({Title = "♾️ Infinite Yield", Callback = function()
+    if getgenv().IY_LOADED then return end
+    getgenv().IY_LOADED = true
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    return "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+end})
+universalTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- UBG tab
+ubgTab:Button({Title = "🔥 Kill Aura", Callback = function()
+    loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+    return "https://eltonshub-loader.netlify.app/UBG1.lua"
+end})
+ubgTab:Button({Title = "🎭 Emotes", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+    return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
+end})
+ubgTab:Button({Title = "❓ Unknown", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+    return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
+end})
+ubgTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- TSB tab
+tsbTab:Button({Title = "🛡️ AUTO BLOCK", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
+    return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
+end})
+tsbTab:Button({Title = "💠 best auto block", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
+    return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
+end})
+tsbTab:Button({Title = "⚡ AUTO TECHS V2", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
+    return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
+end})
+tsbTab:Button({Title = "➡️ SIDE DASH ASSIST", Callback = function()
+    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
+    return "https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"
+end})
+tsbTab:Button({Title = "🔁 M1 RESET", Callback = function()
+    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
+    return "https://api.getpolsec.com/scripts/hosted/fa8d49690e680794f761b497742fd1c2.lua"
+end})
+tsbTab:Button({Title = "💥 BOOMY LoopDash V2", Callback = function()
+    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"))()
+    return "https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"
+end})
+tsbTab:Button({Title = "🌀 Instant Twisted Old", Callback = function()
+    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"))()
+    return "https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"
+end})
+tsbTab:Button({Title = "↩️ Backdash Cancel", Callback = function()
+    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
+    return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
+end})
+tsbTab:Button({Title = "⌨️ Back dash cancel PC (E)", Callback = function()
+    getgenv().keybind = "E"
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
+    return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
+end})
+tsbTab:Button({Title = "🔥 SUPA TECH", Callback = function()
+    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
+    return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
+end})
+tsbTab:Button({Title = "🐱 MEOW TECH", Callback = function()
+    loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
+    return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
+end})
+tsbTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- VIL tab
+vilTab:Button({Title = "🩸 NZ PvP Team", Callback = function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
+    return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
+end})
+vilTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- BBZ tab
+bbzTab:Button({Title = "🏀 BBZ NZ", Callback = function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
+    return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
+end})
+bbzTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- RIVALS tab
+rivTab:Button({Title = "⚔️ Rivals v1", Callback = function()
+    loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+    return "https://pastefy.app/YiGY38uo/raw"
+end})
+rivTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+
+-- UI tab controls removed by user request. Use defaults and Save/Load functions via code only.
+
+-- Symbols tab
+symbolsTab:Button({Title = "🔴 Rojo", Callback = function() setCornerColor(Color3.fromRGB(255,60,60)) end})
+symbolsTab:Button({Title = "🟢 Verde", Callback = function() setCornerColor(Color3.fromRGB(80,200,80)) end})
+symbolsTab:Button({Title = "🔵 Azul", Callback = function() setCornerColor(Color3.fromRGB(100,160,255)) end})
+symbolsTab:Button({Title = "⚪ Blanco", Callback = function() setCornerColor(Color3.fromRGB(255,255,255)) end})
+symbolsTab:Button({Title = "⚫ Negro", Callback = function() setCornerColor(Color3.fromRGB(20,20,20)) end})
+symbolsTab:Button({Title = "🎨 RGB", Callback = function()
+    local startTime = tick()
+    local conn
+    conn = RunService.Heartbeat:Connect(function(dt)
+        if cornerSymbols and #cornerSymbols > 0 and cornerSymbols[1] and cornerSymbols[1].Parent then
+            local elapsed = tick() - startTime
+            local hue = (elapsed * 0.5) % 1
+            local col = Color3.fromHSV(hue, 1, 1)
+            setCornerColor(col)
+        else
+            conn:Disconnect()
+        end
+    end)
+end})
+symbolsTab:Button({Title = "🔁 Toggle Symbols", Callback = function()
+    cornerSymbolsEnabled = not cornerSymbolsEnabled
+    if cornerSymbolsEnabled then
+        if not cornerSymbols or #cornerSymbols == 0 then
+            local positions = {
+                UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
+            }
+            for _, pos in ipairs(positions) do
+                local s = Instance.new("TextLabel", EffectsGui)
+                s.Size = UDim2.new(0,48,0,48)
+                s.Position = pos
+                s.BackgroundTransparency = 1
+                s.Text = "卐"
+                s.Font = Enum.Font.GothamBold
+                s.TextSize = 36
+                s.TextColor3 = Color3.fromRGB(255,60,60)
+                s.Rotation = 0
+                table.insert(cornerSymbols, s)
+            end
+        else
+            for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = true end end
+        end
+    else
+        for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = false end end
+    end
+end})
+
+-- Perfil tab: mostrar nombre, foto y tiempo de uso (usa EffectsGui para la imagen)
+-- perfil tab removed; profile display removed per request
+
 task.spawn(function()
     task.wait(0.5)
     startHub()
 end)
-
-------------------------
--- TOGGLE
-------------------------
-UIS.InputBegan:Connect(function(i,gp)
-    if gp then return end
-    if i.KeyCode == Enum.KeyCode.Z then
-        if not menuLoaded and not Main.Visible then
-            menuLoaded = false
-            Main.Visible = true
-            MainMenu()
-            menuLoaded = true
-        else
-            Main.Visible = not Main.Visible
-        end
-    end
-end)
+-- WindUI tiene su propio ToggleKey; no toggle manual necesario
