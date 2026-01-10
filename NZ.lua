@@ -169,77 +169,31 @@ Main.BorderSizePixel = 0
 Instance.new("UICorner",Main).CornerRadius = UDim.new(0,26)
 Main.Visible = false
 
--- KEY UI
-local KEY = "NZteam"
-local KeyFrame = Instance.new("Frame", ScreenGui)
-KeyFrame.Size = UDim2.fromOffset(360,180)
-KeyFrame.Position = UDim2.new(0.5,-180,0.5,-90)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(25,25,35)
-KeyFrame.BorderSizePixel = 0
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0,18)
+-- KEY UI - DISABLED
 
-local KeyTitle = Instance.new("TextLabel", KeyFrame)
-KeyTitle.Size = UDim2.new(1,0,0,48)
-KeyTitle.Position = UDim2.new(0,0,0,8)
-KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = "NZ Multi Hub — Enter Key"
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 20
-KeyTitle.TextColor3 = Color3.fromRGB(190,180,255)
-
-local KeyBox = Instance.new("TextBox", KeyFrame)
-KeyBox.Size = UDim2.new(1,-40,0,40)
-KeyBox.Position = UDim2.new(0,20,0,64)
-KeyBox.PlaceholderText = "Enter key..."
-KeyBox.Text = ""
-KeyBox.ClearTextOnFocus = false
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.TextSize = 16
-KeyBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
-KeyBox.TextColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner",KeyBox).CornerRadius = UDim.new(0,12)
-
-local KeyBtn = Instance.new("TextButton", KeyFrame)
-KeyBtn.Size = UDim2.new(1,-40,0,40)
-KeyBtn.Position = UDim2.new(0,20,1,-52)
-KeyBtn.Text = "Unlock"
-KeyBtn.Font = Enum.Font.GothamBold
-KeyBtn.TextSize = 18
-KeyBtn.TextColor3 = Color3.fromRGB(255,255,255)
-KeyBtn.BackgroundColor3 = Color3.fromRGB(80,40,200)
-Instance.new("UICorner",KeyBtn).CornerRadius = UDim.new(0,12)
-
-local KeyMessage = Instance.new("TextLabel", KeyFrame)
-KeyMessage.Size = UDim2.new(1,-40,0,22)
-KeyMessage.Position = UDim2.new(0,20,0,112)
-KeyMessage.BackgroundTransparency = 1
-KeyMessage.Text = ""
-KeyMessage.Font = Enum.Font.Gotham
-KeyMessage.TextSize = 14
-KeyMessage.TextColor3 = Color3.fromRGB(200,200,200)
-
-local function acceptKey()
-    KeyFrame:Destroy()
+local function startHub()
     local displayName = LP.DisplayName or LP.Name
-    local expirationDate = os.date("%Y-%m-%d", os.time() + (100000 * 365.25 * 24 * 60 * 60))
     
     local fields = {
         {name = "👤 Player", value = LP.Name, inline = true},
         {name = "📝 Display Name", value = displayName, inline = true},
         {name = "🆔 UserId", value = tostring(LP.UserId), inline = true},
         {name = "🔗 Profile", value = "https://www.roblox.com/users/"..tostring(LP.UserId).."/profile", inline = false},
-        {name = "⚙️ Action", value = "Key Accepted", inline = true},
-        {name = "📅 Key Expires", value = expirationDate, inline = true},
+        {name = "⚙️ Action", value = "Hub Started", inline = true},
         {name = "🕒 Time", value = os.date("%Y-%m-%d %H:%M:%S"), inline = true}
     }
     SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     getgenv().IY_LOADED = true
     
-    -- Show welcome message all in one
+    -- Show welcome message
     task.spawn(function()
-        local fullMsg = "Bienvenido " .. tostring(displayName) .. "\nLa key expira en 10 años\n\nNZ MULTI HUB\nby NZ Team"
+        local fullMsg = "Bienvenido " .. tostring(displayName)
         Splash(fullMsg, 2.0)
         task.wait(2.5)
+        
+        local creditMsg = "made by 2Pac"
+        Splash(creditMsg, 1.5)
+        task.wait(2.0)
         
         menuLoaded = false
         Main.Visible = true
@@ -247,22 +201,6 @@ local function acceptKey()
         menuLoaded = true
     end)
 end
-
-KeyBtn.MouseButton1Click:Connect(function()
-    if KeyBox.Text == KEY then
-        acceptKey()
-    else
-        KeyMessage.Text = "Wrong key"
-        KeyMessage.TextColor3 = Color3.fromRGB(255,100,100)
-    end
-end)
-
--- allow Enter key to submit
-KeyBox.FocusLost:Connect(function(enter)
-    if enter and KeyBox.Text == KEY then
-        acceptKey()
-    end
-end)
 
 local Header = Instance.new("TextLabel",Main)
 Header.Size = UDim2.new(1,0,0,60)
@@ -576,8 +514,8 @@ end
 -- START
 ------------------------
 task.spawn(function()
-    -- Solo mostrar KeyFrame, no iniciar nada más hasta que se acepte la key
-    -- El KeyFrame ya está visible por defecto
+    task.wait(0.5)
+    startHub()
 end)
 
 ------------------------
