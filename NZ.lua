@@ -131,6 +131,9 @@ ScreenGui.ResetOnSpawn = false
 local Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
 
+-- Corner symbols table (global for menu control)
+local cornerSymbols = {}
+
 ------------------------
 -- SPLASH
 ------------------------
@@ -194,7 +197,7 @@ local function startHub()
         task.wait(0.4)
 
         -- Create four rotating loading symbols in each corner (neutral symbol)
-        local cornerSymbols = {}
+        cornerSymbols = {}
         local positions = {
             UDim2.new(0,10,0,10),        -- top-left
             UDim2.new(1,-58,0,10),       -- top-right
@@ -215,9 +218,7 @@ local function startHub()
             table.insert(cornerSymbols, s)
         end
 
-        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 8}):Play()
-
-        -- Rotate symbols continuously using RunService
+        -- Rotate symbols continuously using RunService (no blur)
         local conn
         conn = RunService.Heartbeat:Connect(function(dt)
             for _, lbl in ipairs(cornerSymbols) do
@@ -225,11 +226,6 @@ local function startHub()
                     lbl.Rotation = (lbl.Rotation + dt * 180) % 360
                 end
             end
-        end)
-
-        -- Keep the symbols visible; reduce blur a bit after a short time
-        task.delay(1.8, function()
-            TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 4}):Play()
         end)
 
         local creditMsg = "made by 2Pac"
@@ -303,6 +299,16 @@ end)
 -- UTILS
 ------------------------
 local menuLoaded = false
+
+-- Helper to set color of corner symbols
+local function setCornerColor(col)
+    if type(col) ~= "userdata" then return end
+    for _, lbl in ipairs(cornerSymbols) do
+        if lbl and lbl.Parent then
+            lbl.TextColor3 = col
+        end
+    end
+end
 
 local function Clear()
     for _,v in ipairs(Holder:GetChildren()) do
@@ -439,7 +445,7 @@ Players.PlayerAdded:Connect(connectPlayerChat)
 ------------------------
 -- MENUS
 ------------------------
-local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, RIVMenu, UniversalMenu
+local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, RIVMenu, SymbolsMenu, UniversalMenu
 
 function UniversalMenu()
     Clear()
@@ -531,6 +537,96 @@ function RIVMenu()
     Button("⬅️ Back",MainMenu)
 end
 
+function SymbolsMenu()
+    Clear()
+    Button("🔴 Rojo",function()
+        setCornerColor(Color3.fromRGB(255,60,60))
+    end)
+    Button("🟢 Verde",function()
+        setCornerColor(Color3.fromRGB(80,200,80))
+    end)
+    Button("🔵 Azul",function()
+        setCornerColor(Color3.fromRGB(100,160,255))
+    end)
+    Button("⚪ Blanco",function()
+        setCornerColor(Color3.fromRGB(255,255,255))
+    end)
+    Button("⚫ Negro",function()
+        setCornerColor(Color3.fromRGB(20,20,20))
+    end)
+    Button("🎨 RGB Custom",function()
+        -- Simple RGB prompt
+        local prompt = Instance.new("Frame", ScreenGui)
+        prompt.Size = UDim2.new(0,260,0,140)
+        prompt.Position = UDim2.new(0.5,-130,0.5,-70)
+        prompt.BackgroundColor3 = Color3.fromRGB(25,25,35)
+        prompt.BorderSizePixel = 0
+        Instance.new("UICorner", prompt).CornerRadius = UDim.new(0,12)
+
+        local title = Instance.new("TextLabel", prompt)
+        title.Size = UDim2.new(1,0,0,28)
+        title.Position = UDim2.new(0,0,0,6)
+        title.BackgroundTransparency = 1
+        title.Text = "Custom RGB (0-255)"
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 16
+        title.TextColor3 = Color3.fromRGB(220,220,220)
+
+        local rBox = Instance.new("TextBox", prompt)
+        rBox.PlaceholderText = "R"
+        rBox.Size = UDim2.new(0,72,0,34)
+        rBox.Position = UDim2.new(0,12,0,40)
+        rBox.ClearTextOnFocus = false
+        rBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+        rBox.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", rBox).CornerRadius = UDim.new(0,8)
+
+        local gBox = Instance.new("TextBox", prompt)
+        gBox.PlaceholderText = "G"
+        gBox.Size = UDim2.new(0,72,0,34)
+        gBox.Position = UDim2.new(0,96,0,40)
+        gBox.ClearTextOnFocus = false
+        gBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+        gBox.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", gBox).CornerRadius = UDim.new(0,8)
+
+        local bBox = Instance.new("TextBox", prompt)
+        bBox.PlaceholderText = "B"
+        bBox.Size = UDim2.new(0,72,0,34)
+        bBox.Position = UDim2.new(0,180,0,40)
+        bBox.ClearTextOnFocus = false
+        bBox.BackgroundColor3 = Color3.fromRGB(35,35,45)
+        bBox.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", bBox).CornerRadius = UDim.new(0,8)
+
+        local applyBtn = Instance.new("TextButton", prompt)
+        applyBtn.Size = UDim2.new(0,100,0,34)
+        applyBtn.Position = UDim2.new(0.5,-50,1,-44)
+        applyBtn.Text = "Apply"
+        applyBtn.Font = Enum.Font.GothamBold
+        applyBtn.TextSize = 16
+        applyBtn.BackgroundColor3 = Color3.fromRGB(70,40,200)
+        applyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0,8)
+
+        local function cleanup()
+            if prompt and prompt.Parent then prompt:Destroy() end
+        end
+
+        applyBtn.MouseButton1Click:Connect(function()
+            local r = tonumber(rBox.Text) or tonumber(rBox.PlaceholderText) or 0
+            local g = tonumber(gBox.Text) or tonumber(gBox.PlaceholderText) or 0
+            local b = tonumber(bBox.Text) or tonumber(bBox.PlaceholderText) or 0
+            r = math.clamp(math.floor(r), 0, 255)
+            g = math.clamp(math.floor(g), 0, 255)
+            b = math.clamp(math.floor(b), 0, 255)
+            setCornerColor(Color3.fromRGB(r,g,b))
+            cleanup()
+        end)
+    end)
+    Button("⬅️ Back",MainMenu)
+end
+
 function MainMenu()
     Clear()
 
@@ -563,6 +659,7 @@ function MainMenu()
             TeleportService:Teleport(PLACE_IDS.RIVALS,LP)
         else RIVMenu() end
     end)
+    Button("🎛️ Symbolos",SymbolsMenu)
 
     Button("🌐 Universal Scripts",UniversalMenu)
 end
