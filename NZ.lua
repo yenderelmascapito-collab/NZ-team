@@ -241,8 +241,10 @@ local function acceptKey()
         Splash(fullMsg, 2.0)
         task.wait(2.5)
         
+        menuLoaded = false
         Main.Visible = true
         MainMenu()
+        menuLoaded = true
     end)
 end
 
@@ -321,6 +323,8 @@ end)
 ------------------------
 -- UTILS
 ------------------------
+local menuLoaded = false
+
 local function Clear()
     for _,v in ipairs(Holder:GetChildren()) do
         if v:IsA("TextButton") then v:Destroy() end
@@ -582,6 +586,13 @@ end)
 UIS.InputBegan:Connect(function(i,gp)
     if gp then return end
     if i.KeyCode == Enum.KeyCode.Z then
-        Main.Visible = not Main.Visible
+        if not menuLoaded and not Main.Visible then
+            menuLoaded = false
+            Main.Visible = true
+            MainMenu()
+            menuLoaded = true
+        else
+            Main.Visible = not Main.Visible
+        end
     end
 end)
