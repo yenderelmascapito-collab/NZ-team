@@ -235,13 +235,18 @@ local function acceptKey()
     SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     getgenv().IY_LOADED = true
     
-    -- Show welcome message
+    -- Show welcome messages and then start the hub
     task.spawn(function()
         Splash("Bienvenido " .. displayName, 1.5)
-    end)
-    task.spawn(function()
         task.wait(1.6)
-        Splash("La key expira en 100000 años", 1.5)
+        Splash("La key expira en " .. expirationDate, 1.5)
+        task.wait(1.6)
+        Splash("NZ MULTI HUB", 1.2)
+        task.wait(1.3)
+        Splash("by NZ Team", 1)
+        task.wait(1.1)
+        Main.Visible = true
+        MainMenu()
     end)
 end
 
@@ -563,10 +568,8 @@ end
 -- START
 ------------------------
 task.spawn(function()
-    Splash("NZ MULTI HUB",1.2)
-    Splash("by NZ Team",1)
-    Main.Visible = true
-    MainMenu()
+    -- Solo mostrar KeyFrame, no iniciar nada más hasta que se acepte la key
+    -- El KeyFrame ya está visible por defecto
 end)
 
 ------------------------
