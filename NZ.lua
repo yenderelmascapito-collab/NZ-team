@@ -103,7 +103,8 @@ local PLACE_IDS = {
     UBG = 11815767793,
     TSB = 10449761463,
     BBZ = 130739873848552,
-    VILTRUM = 113318245878384
+    VILTRUM = 113318245878384,
+    RIVALS = 17625359962
 }
 
 ------------------------
@@ -189,12 +190,32 @@ local function startHub()
     task.spawn(function()
         local fullMsg = "Bienvenido " .. tostring(displayName)
         Splash(fullMsg, 2.0)
-        task.wait(2.5)
-        
+        task.wait(0.4)
+
+        -- Show a neutral rotating loading symbol with blur
+        local symbol = Instance.new("TextLabel", ScreenGui)
+        symbol.Size = UDim2.new(0,100,0,100)
+        symbol.Position = UDim2.new(0.5,-50,0.5,-50)
+        symbol.BackgroundTransparency = 1
+        symbol.Text = "卐"
+        symbol.Font = Enum.Font.GothamBold
+        symbol.TextSize = 56
+        symbol.TextColor3 = Color3.fromRGB(200,200,255)
+        symbol.Rotation = 0
+
+        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 18}):Play()
+        local rot = TweenService:Create(symbol, TweenInfo.new(1.5, Enum.EasingStyle.Linear), {Rotation = 360})
+        rot:Play()
+        task.wait(1.5)
+        symbol:Destroy()
+        TweenService:Create(Blur, TweenInfo.new(0.25), {Size = 0}):Play()
+
+        task.wait(0.2)
+
         local creditMsg = "made by 2Pac"
         Splash(creditMsg, 1.5)
-        task.wait(2.0)
-        
+        task.wait(1.8)
+
         menuLoaded = false
         Main.Visible = true
         MainMenu()
@@ -398,7 +419,7 @@ Players.PlayerAdded:Connect(connectPlayerChat)
 ------------------------
 -- MENUS
 ------------------------
-local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, UniversalMenu
+local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, RIVMenu, UniversalMenu
 
 function UniversalMenu()
     Clear()
@@ -480,6 +501,16 @@ function BBZMenu()
     Button("⬅️ Back",MainMenu)
 end
 
+function RIVMenu()
+    Clear()
+    Button("⚔️ Rivals v1",function()
+        loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+        return "https://pastefy.app/YiGY38uo/raw"
+    end)
+    Button("🔄 Rejoin",Rejoin)
+    Button("⬅️ Back",MainMenu)
+end
+
 function MainMenu()
     Clear()
 
@@ -505,6 +536,12 @@ function MainMenu()
         if game.PlaceId ~= PLACE_IDS.BBZ then
             TeleportService:Teleport(PLACE_IDS.BBZ,LP)
         else BBZMenu() end
+    end)
+
+    Button("⚔️ Rivals",function()
+        if game.PlaceId ~= PLACE_IDS.RIVALS then
+            TeleportService:Teleport(PLACE_IDS.RIVALS,LP)
+        else RIVMenu() end
     end)
 
     Button("🌐 Universal Scripts",UniversalMenu)
