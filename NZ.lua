@@ -235,20 +235,11 @@ local function acceptKey()
     SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     getgenv().IY_LOADED = true
     
-    -- Show welcome messages and then start the hub
+    -- Show welcome message all in one
     task.spawn(function()
-        local welcomeMsg = "Bienvenido " .. tostring(displayName)
-        Splash(welcomeMsg, 1.0)
-        task.wait(1.2)
-        
-        Splash("La key expira en 10 años", 1.0)
-        task.wait(1.2)
-        
-        Splash("NZ MULTI HUB", 0.8)
-        task.wait(1.0)
-        
-        Splash("by NZ Team", 0.8)
-        task.wait(1.0)
+        local fullMsg = "Bienvenido " .. tostring(displayName) .. "\nLa key expira en 10 años\n\nNZ MULTI HUB\nby NZ Team"
+        Splash(fullMsg, 2.0)
+        task.wait(2.5)
         
         Main.Visible = true
         MainMenu()
@@ -312,7 +303,8 @@ local Holder = Instance.new("ScrollingFrame",Main)
 Holder.Position = UDim2.new(0,16,0,72)
 Holder.Size = UDim2.new(1,-32,1,-90)
 Holder.ScrollBarThickness = 4
-Holder.BackgroundTransparency = 1
+Holder.BackgroundTransparency = 0
+Holder.BackgroundColor3 = Color3.fromRGB(10,10,14)
 Holder.BorderSizePixel = 0
 
 local Layout = Instance.new("UIListLayout",Holder)
