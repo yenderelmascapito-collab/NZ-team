@@ -483,7 +483,7 @@ function TSBMenu()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
         return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
     end)
-    Button("best autoblock",function()
+    Button("💠 best auto block",function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
         return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
     end)
@@ -502,6 +502,14 @@ function TSBMenu()
     Button("💥 BOOMY LoopDash V2",function()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"))()
         return "https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"
+    end)
+    Button("🌀 Instant Twisted Old",function()
+        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"))()
+        return "https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"
+    end)
+    Button("↩️ Backdash Cancel",function()
+        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
+        return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
     end)
     Button("🔥 SUPA TECH",function()
         loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
