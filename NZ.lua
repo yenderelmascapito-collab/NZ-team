@@ -31,7 +31,7 @@ local WEBHOOKS = {
 }
 
 -- Usuarios a monitorear y enviar al webhook ALERT
-local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a"}
+local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a", "Lucas7747343"}
 
 local function SendWebhook(url, content)
     -- Support either a plain content string or an embed/table with fields
