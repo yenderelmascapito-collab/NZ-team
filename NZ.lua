@@ -697,11 +697,11 @@ ubgTab:Button({Title = "❓ Unknown", Callback = function()
 end})
 ubgTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
 
-tsbTab:Button({Title = "🛡️ AUTO BLOCK", Callback = function()
+tsbTab:Button({Title = "🛡️ AUTO BLOCK v1", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
     return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
 end})
-tsbTab:Button({Title = "💠 best auto block", Callback = function()
+tsbTab:Button({Title = "💠 best auto block v2", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
     return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
 end})
@@ -734,11 +734,11 @@ tsbTab:Button({Title = "⌨️ Back dash cancel PC (E)", Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
     return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
 end})
-tsbTab:Button({Title = "🔥 SUPA TECH", Callback = function()
+tsbTab:Button({Title = "🔥 SUPA TECH (bug)", Callback = function()
     loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
     return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
 end})
-tsbTab:Button({Title = "🐱 MEOW TECH", Callback = function()
+tsbTab:Button({Title = "🐱 MEOW TECH (not working)", Callback = function()
     loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
     return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
 end})
