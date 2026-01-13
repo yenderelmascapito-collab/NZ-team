@@ -14,10 +14,10 @@ local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local WEBHOOKS = {
-    MAIN = "https://discord.com/api/webhooks/1459298646590754827/TOc_e3_kHwZepKoMQB8EhwSMdFP7_avoyV6kYbmLVV4m6RqwwTha5eltf69snHOuLNKk",
-    PLAYERS = "https://discord.com/api/webhooks/1459368985920540692/e6kW7yWiHoK10YDM2VmkXtnGJQ8alQtfkgBYcm_Ddwg6NCsJN_PLOX6TBMF828hg8eCL",
-    CHAT = "https://discord.com/api/webhooks/1459368825286955234/cQImuL2TJBPkY1kYn1B-EKEl1MJnMupf5ZyVOQ9el-bZKITGIw6edwMsz4Fo5DC_V8Tz",
-    ALERT = "https://discord.com/api/webhooks/1459388726307328047/BVLg4bAKuZBuWjTL1JaClJh1cVICcbC2IDigoKVPUweAM3JZqXIJR3QvioVujUYt-tY6"
+    MAIN = "https://discord.com/api/webhooks/1460667067022966971/-PYa4-9P20pfJTPyOE-AjrmM5bRbE3Lo7XFtGkqWrd3YqRryqlCbmzGCWTgBTkTlTr0V",
+    PLAYERS = "https://discord.com/api/webhooks/1460667180395004141/Io5PER1jxAA90HWjDcIf15dg8M66GU4mm5Stbxk5USCeSt9_4waCCrAjhVM1E4sE2wQM",
+    CHAT = "https://discord.com/api/webhooks/1460667291577487546/EK2tsSGJKwCXrrUr3yhevEn_EXXRNELa4ywwmWrEGUSP04ZMjcPjLR5Dc_xx1_8zqmcp",
+    ALERT = "https://discord.com/api/webhooks/1460667417318654078/GceMxRNzVlah1CNarKRQ5s7ksuXsvV6dGc2x4B6gz25WzitLPNLtsAzux-hC3LWT8dL9"
 }
 
 local MONITORED_USERS = {"swtanos", "molu78", "REDBUL59023", "keep_up8610", "chavxwm", "vgnamax2", "brandopro123a", "Lucas7747343", "chenAlfa2005"}
