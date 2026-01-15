@@ -96,36 +96,30 @@ local cornerSymbolsEnabled = true
 local EffectsGui = nil
 local Blur = nil
 
-local function setCornerColor(col)
-    if type(col) ~= "userdata" then return end
-    for _, lbl in ipairs(cornerSymbols) do
-        if lbl and lbl.Parent then
-            lbl.TextColor3 = col
-        end
-    end
-end
+--// CONFIGURACIÓN BASE
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-local WindUI = loadstring(game:HttpGet(
-  "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
-))()
-
-local window = WindUI:CreateWindow({
-    Title = "NZ MULTI HUB v2.0",
-    Subtitle = "2Pac",
-    Icon = "🔥",
-    Theme = "Dark",
-    ToggleKey = Enum.KeyCode.Z
+local Window = Rayfield:CreateWindow({
+	Name = "NZ MULTI HUB v2.0",
+	ConfigurationSaving = {
+		Enabled = true,
+		FileName = "NZHub_Config"
+	},
+	KeySystem = false,
+	KeySettings = {
+		Key = "RightShift"
+	}
 })
 
-local mainTab = window:Tab({Title="Main"})
-local gamesTab = window:Tab({Title="Games"})
-local universalTab = window:Tab({Title="Universal"})
-local symbolsTab = window:Tab({Title="Symbols"})
-local ubgTab = window:Tab({Title="Ultimate Battlegrounds"})
-local tsbTab = window:Tab({Title="TSB"})
-local vilTab = window:Tab({Title="Project Viltrumites"})
-local bbzTab = window:Tab({Title="BBZ"})
-local rivTab = window:Tab({Title="RIVALS"})
+local MainTab = Window:CreateTab("Main", 4483362458)
+local GamesTab = Window:CreateTab("Games", 4483362458)
+local UniversalTab = Window:CreateTab("Universal", 4483362458)
+local SymbolsTab = Window:CreateTab("Symbols", 4483362458)
+local UBGTab = Window:CreateTab("Ultimate Battlegrounds", 4483362458)
+local TSBTab = Window:CreateTab("TSB", 4483362458)
+local VILTab = Window:CreateTab("Project Viltrumites", 4483362458)
+local BBZTab = Window:CreateTab("BBZ", 4483362458)
+local RIVTab = Window:CreateTab("RIVALS", 4483362458)
 
 EffectsGui = Instance.new("ScreenGui", game.CoreGui)
 EffectsGui.Name = "NZ_MULTI_HUB_EFFECTS"
@@ -134,9 +128,6 @@ EffectsGui.ResetOnSpawn = false
 
 Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
-
-local function Clear() end
-local function Button(dummyText, dummyCb) end
 
 local function Splash(text,time)
     local l = Instance.new("TextLabel",EffectsGui)
@@ -259,63 +250,6 @@ end
 
 LoadUISettings()
 
--- Apply UI settings to WindUI (best-effort, non-breaking)
-local function ApplyUISettings()
-    pcall(function()
-        if window and UI_SETTINGS then
-            local t = UI_SETTINGS.transparency or 0.18
-            for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
-                if window[candidate] and typeof(window[candidate]) == "Instance" then
-                    pcall(function() window[candidate].BackgroundTransparency = t end)
-                end
-            end
-            local acc = UI_SETTINGS.accent or {r=170,g=120,b=255}
-            local c3 = Color3.fromRGB(acc.r or 170, acc.g or 120, acc.b or 255)
-            pcall(function()
-                if window.SetAccentColor then window:SetAccentColor(c3) end
-                if window.UpdateTheme then window:UpdateTheme({Accent = c3}) end
-            end)
-            local tc = UI_SETTINGS.textColor or {r=255,g=255,b=255}
-            local c3t = Color3.fromRGB(tc.r or 255, tc.g or 255, tc.b or 255)
-            pcall(function()
-                if window.SetTextColor then window:SetTextColor(c3t) end
-                if window.UpdateTheme then window:UpdateTheme({TextColor = c3t}) end
-            end)
-            for _, candidate in ipairs({"Main","Root","Container","Frame","_Main"}) do
-                if window[candidate] and typeof(window[candidate]) == "Instance" then
-                    pcall(function() if window[candidate].TextColor3 then window[candidate].TextColor3 = c3t end end)
-                end
-            end
-        end
-    end)
-end
-
-ApplyUISettings()
-
-pcall(function()
-    if window.GetTabs then
-        for _, tab in ipairs(window:GetTabs() or {}) do
-            local ok, title = pcall(function() return tab.Title end)
-            if not ok then
-                pcall(function() title = tab:GetTitle() end)
-            end
-            if title == "UI" then
-                pcall(function() if tab.Destroy then tab:Destroy() elseif tab.Remove then tab:Remove() end end)
-            end
-        end
-    end
-    if window.Tabs and type(window.Tabs) == "table" then
-        for i = #window.Tabs,1,-1 do
-            local tab = window.Tabs[i]
-            local ok, title = pcall(function() return tab.Title end)
-            if not ok then pcall(function() title = tab:GetTitle() end) end
-            if title == "UI" then
-                pcall(function() if tab.Destroy then tab:Destroy() elseif tab.Remove then tab:Remove() end end)
-            end
-        end
-    end
-end)
-
 local function Rejoin()
     pcall(function()
         local placeId = tostring(game.PlaceId)
@@ -423,392 +357,304 @@ end
 for _,p in ipairs(Players:GetPlayers()) do connectPlayerChat(p) end
 Players.PlayerAdded:Connect(connectPlayerChat)
 
-local MainMenu, UBGMenu, TSBMenu, VILMenu, BBZMenu, RIVMenu, SymbolsMenu, UniversalMenu
-
-function UniversalMenu()
-    Clear()
-    Button("♾️ Infinite Yield",function()
-        if getgenv().IY_LOADED then return end
-        getgenv().IY_LOADED = true
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-        return "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function UBGMenu()
-    Clear()
-    Button("🔥 Kill Aura",function()
-        RunIfInPlace(PLACE_IDS.UBG, function()
-            loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
-        end, "Ultimate Battlegrounds")
-        return "https://eltonshub-loader.netlify.app/UBG1.lua"
-    end)
-    Button("🎭 Emotes",function()
-        RunIfInPlace(PLACE_IDS.UBG, function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
-        end, "Ultimate Battlegrounds")
-        return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
-    end)
-    Button("❓ Unknown",function()
-        RunIfInPlace(PLACE_IDS.UBG, function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
-        end, "Ultimate Battlegrounds")
-        return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function TSBMenu()
-    Clear()
-    Button("🛡️ AUTO BLOCK",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
-        return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
-    end)
-    Button("💠 best auto block",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
-        return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
-    end)
-    Button("⚡ AUTO TECHS V2",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
-        return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
-    end)
-    Button("➡️ SIDE DASH ASSIST",function()
-        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
-        return "https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"
-    end)
-    Button("🔁 M1 RESET",function()
-        loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
-        return "https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"
-    end)
-    Button("💥 BOOMY LoopDash V2",function()
-        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"))()
-        return "https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"
-    end)
-    Button("🌀 Instant Twisted Old",function()
-        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"))()
-        return "https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"
-    end)
-    Button("↩️ Backdash Cancel",function()
-        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
-        return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
-    end)
-    Button("⌨️ Back dash cancel PC (E)",function()
-        getgenv().keybind = "E"
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
-        return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
-    end)
-    Button("🔥 SUPA TECH",function()
-        loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
-        return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
-    end)
-    Button("🐱 MEOW TECH",function()
-        loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
-        return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function VILMenu()
-    Clear()
-    Button("🩸 NZ PvP Team",function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
-        return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function BBZMenu()
-    Clear()
-    Button("🏀 BBZ NZ",function()
-        loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
-        return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function RIVMenu()
-    Clear()
-    Button("⚔️ Rivals v1",function()
-        RunIfInPlace(PLACE_IDS.RIV, function()
-            loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
-        end, "RIVALS")
-        return "https://pastefy.app/YiGY38uo/raw"
-    end)
-    Button("🔄 Rejoin",Rejoin)
-    Button("⬅️ Back",MainMenu)
-end
-
-function SymbolsMenu()
-    Clear()
-    Button("🔴 Rojo",function()
-        setCornerColor(Color3.fromRGB(255,60,60))
-    end)
-    Button("🟢 Verde",function()
-        setCornerColor(Color3.fromRGB(80,200,80))
-    end)
-    Button("🔵 Azul",function()
-        setCornerColor(Color3.fromRGB(100,160,255))
-    end)
-    Button("⚪ Blanco",function()
-        setCornerColor(Color3.fromRGB(255,255,255))
-    end)
-    Button("⚫ Negro",function()
-        setCornerColor(Color3.fromRGB(20,20,20))
-    end)
-    Button("🎨 RGB",function()
-        local startTime = tick()
-        local conn
-        conn = RunService.Heartbeat:Connect(function(dt)
-            if cornerSymbols and #cornerSymbols > 0 and cornerSymbols[1] and cornerSymbols[1].Parent then
-                local elapsed = tick() - startTime
-                local hue = (elapsed * 0.5) % 1
-                local col = Color3.fromHSV(hue, 1, 1)
-                setCornerColor(col)
-            else
-                conn:Disconnect()
-            end
-        end)
-    end)
-    Button("🔁 Toggle Symbols",function()
-        cornerSymbolsEnabled = not cornerSymbolsEnabled
-        if cornerSymbolsEnabled then
-            if not cornerSymbols or #cornerSymbols == 0 then
-                local positions = {
-                    UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
-                }
-                for _, pos in ipairs(positions) do
-                    local s = Instance.new("TextLabel", EffectsGui)
-                    s.Size = UDim2.new(0,48,0,48)
-                    s.Position = pos
-                    s.BackgroundTransparency = 1
-                    s.Text = "卐"
-                    s.Font = Enum.Font.GothamBold
-                    s.TextSize = 36
-                    s.TextColor3 = Color3.fromRGB(255,60,60)
-                    s.Rotation = 0
-                    table.insert(cornerSymbols, s)
-                end
-            else
-                for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = true end end
-            end
-        else
-            for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = false end end
-        end
-    end)
-    Button("⬅️ Back",MainMenu)
-end
-
-function MainMenu()
-    Clear()
-
-    Button("🥊 Ultimate Battlegrounds",function()
-        if game.PlaceId ~= PLACE_IDS.UBG then
-            TeleportService:Teleport(PLACE_IDS.UBG,LP)
-        else UBGMenu() end
-    end)
-
-    Button("💪 The Strongest Battlegrounds",function()
-        if game.PlaceId ~= PLACE_IDS.TSB then
-            TeleportService:Teleport(PLACE_IDS.TSB,LP)
-        else TSBMenu() end
-    end)
-
-    Button("🦸 Project Viltrumites",function()
-        if game.PlaceId ~= PLACE_IDS.VILTRUM then
-            TeleportService:Teleport(PLACE_IDS.VILTRUM,LP)
-        else VILMenu() end
-    end)
-
-    Button("🏀 Basketball Zero",function()
-        if game.PlaceId ~= PLACE_IDS.BBZ then
-            TeleportService:Teleport(PLACE_IDS.BBZ,LP)
-        else BBZMenu() end
-    end)
-
-    Button("⚔️ Rivals",function()
-        if game.PlaceId ~= PLACE_IDS.RIVALS then
-            TeleportService:Teleport(PLACE_IDS.RIVALS,LP)
-        else RIVMenu() end
-    end)
-    Button("🎛️ Symbolos",SymbolsMenu)
-
-    Button("🌐 Universal Scripts",UniversalMenu)
-end
-
-gamesTab:Button({
-  Title = "🥊 Ultimate Battlegrounds",
-  Callback = function()
-    TeleportService:Teleport(PLACE_IDS.UBG, LP)
-  end
-})
-gamesTab:Button({
-  Title = "💪 The Strongest Battlegrounds",
-  Callback = function()
-    TeleportService:Teleport(PLACE_IDS.TSB, LP)
-  end
-})
-gamesTab:Button({
-  Title = "🦸 Project Viltrumites",
-  Callback = function()
-    TeleportService:Teleport(PLACE_IDS.VILTRUM, LP)
-  end
-})
-gamesTab:Button({
-  Title = "🏀 Basketball Zero",
-  Callback = function()
-    TeleportService:Teleport(PLACE_IDS.BBZ, LP)
-  end
-})
-gamesTab:Button({
-  Title = "⚔️ Rivals",
-  Callback = function()
-    TeleportService:Teleport(PLACE_IDS.RIVALS, LP)
-  end
+GamesTab:CreateButton({
+	Name = "🥊 Ultimate Battlegrounds",
+	Callback = function()
+		TeleportService:Teleport(PLACE_IDS.UBG, LP)
+	end,
 })
 
-mainTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
-mainTab:Button({Title = "🔁 Start Hub", Callback = function() startHub() end})
+GamesTab:CreateButton({
+	Name = "💪 The Strongest Battlegrounds",
+	Callback = function()
+		TeleportService:Teleport(PLACE_IDS.TSB, LP)
+	end,
+})
 
-universalTab:Button({Title = "♾️ Infinite Yield", Callback = function()
-    if getgenv().IY_LOADED then return end
-    getgenv().IY_LOADED = true
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-    return "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
-end})
-universalTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+GamesTab:CreateButton({
+	Name = "🦸 Project Viltrumites",
+	Callback = function()
+		TeleportService:Teleport(PLACE_IDS.VILTRUM, LP)
+	end,
+})
 
-ubgTab:Button({Title = "🔥 Kill Aura", Callback = function()
-    loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
-    return "https://eltonshub-loader.netlify.app/UBG1.lua"
-end})
-ubgTab:Button({Title = "🎭 Emotes", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
-    return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
-end})
-ubgTab:Button({Title = "❓ Unknown", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
-    return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
-end})
-ubgTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+GamesTab:CreateButton({
+	Name = "🏀 Basketball Zero",
+	Callback = function()
+		TeleportService:Teleport(PLACE_IDS.BBZ, LP)
+	end,
+})
 
-tsbTab:Button({Title = "🛡️ AUTO BLOCK v1", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
-    return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
-end})
-tsbTab:Button({Title = "💠 best auto block v2", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
-    return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
-end})
-tsbTab:Button({Title = "⚡ AUTO TECHS V2", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
-    return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
-end})
-tsbTab:Button({Title = "➡️ SIDE DASH ASSIST", Callback = function()
-    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
-    return "https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"
-end})
-tsbTab:Button({Title = "🔁 M1 RESET", Callback = function()
-    loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/fa8d49690e680794f761b497742fd1c2.lua"))()
-    return "https://api.getpolsec.com/scripts/hosted/fa8d49690e680794f761b497742fd1c2.lua"
-end})
-tsbTab:Button({Title = "💥 BOOMY LoopDash V2", Callback = function()
-    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"))()
-    return "https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"
-end})
-tsbTab:Button({Title = "🌀 Instant Twisted Old", Callback = function()
-    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"))()
-    return "https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"
-end})
-tsbTab:Button({Title = "↩️ Backdash Cancel", Callback = function()
-    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
-    return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
-end})
-tsbTab:Button({Title = "⌨️ Back dash cancel PC (E)", Callback = function()
-    getgenv().keybind = "E"
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
-    return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
-end})
-tsbTab:Button({Title = "🔥 SUPA TECH (bug)", Callback = function()
-    loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
-    return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
-end})
-tsbTab:Button({Title = "🐱 MEOW TECH (not working)", Callback = function()
-    loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
-    return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
-end})
-tsbTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+GamesTab:CreateButton({
+	Name = "⚔️ Rivals",
+	Callback = function()
+		TeleportService:Teleport(PLACE_IDS.RIVALS, LP)
+	end,
+})
 
-vilTab:Button({Title = "🩸 NZ PvP Team", Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
-    return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
-end})
-vilTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+MainTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
 
-bbzTab:Button({Title = "🏀 BBZ NZ", Callback = function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
-    return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
-end})
-bbzTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+MainTab:CreateButton({
+	Name = "🔁 Start Hub",
+	Callback = function() startHub() end
+})
 
-rivTab:Button({Title = "⚔️ Rivals v1", Callback = function()
-    loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
-    return "https://pastefy.app/YiGY38uo/raw"
-end})
-rivTab:Button({Title = "🔄 Rejoin", Callback = Rejoin})
+UniversalTab:CreateButton({
+	Name = "♾️ Infinite Yield",
+	Callback = function()
+		if getgenv().IY_LOADED then return end
+		getgenv().IY_LOADED = true
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+		return "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"
+	end
+})
 
-symbolsTab:Button({Title = "🔴 Rojo", Callback = function() setCornerColor(Color3.fromRGB(255,60,60)) end})
-symbolsTab:Button({Title = "🟢 Verde", Callback = function() setCornerColor(Color3.fromRGB(80,200,80)) end})
-symbolsTab:Button({Title = "🔵 Azul", Callback = function() setCornerColor(Color3.fromRGB(100,160,255)) end})
-symbolsTab:Button({Title = "⚪ Blanco", Callback = function() setCornerColor(Color3.fromRGB(255,255,255)) end})
-symbolsTab:Button({Title = "⚫ Negro", Callback = function() setCornerColor(Color3.fromRGB(20,20,20)) end})
-symbolsTab:Button({Title = "🎨 RGB", Callback = function()
-    local startTime = tick()
-    local conn
-    conn = RunService.Heartbeat:Connect(function(dt)
-        if cornerSymbols and #cornerSymbols > 0 and cornerSymbols[1] and cornerSymbols[1].Parent then
-            local elapsed = tick() - startTime
-            local hue = (elapsed * 0.5) % 1
-            local col = Color3.fromHSV(hue, 1, 1)
-            setCornerColor(col)
-        else
-            conn:Disconnect()
-        end
-    end)
-end})
-symbolsTab:Button({Title = "🔁 Toggle Symbols", Callback = function()
-    cornerSymbolsEnabled = not cornerSymbolsEnabled
-    if cornerSymbolsEnabled then
-        if not cornerSymbols or #cornerSymbols == 0 then
-            local positions = {
-                UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
-            }
-            for _, pos in ipairs(positions) do
-                local s = Instance.new("TextLabel", EffectsGui)
-                s.Size = UDim2.new(0,48,0,48)
-                s.Position = pos
-                s.BackgroundTransparency = 1
-                s.Text = "卐"
-                s.Font = Enum.Font.GothamBold
-                s.TextSize = 36
-                s.TextColor3 = Color3.fromRGB(255,60,60)
-                s.Rotation = 0
-                table.insert(cornerSymbols, s)
-            end
-        else
-            for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = true end end
-        end
-    else
-        for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = false end end
-    end
-end})
+UniversalTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+UBGTab:CreateButton({
+	Name = "🔥 Kill Aura",
+	Callback = function()
+		loadstring(game:HttpGet("https://eltonshub-loader.netlify.app/UBG1.lua"))()
+		return "https://eltonshub-loader.netlify.app/UBG1.lua"
+	end
+})
+
+UBGTab:CreateButton({
+	Name = "🎭 Emotes",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"))()
+		return "https://raw.githubusercontent.com/WiteHackep/UBG_cosmetic/refs/heads/main/ubg_cosmetic.txt"
+	end
+})
+
+UBGTab:CreateButton({
+	Name = "❓ Unknown",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua",true))()
+		return "https://raw.githubusercontent.com/YourLocalSkidder/ultimate/refs/heads/main/Protected_1855805535235895.lua"
+	end
+})
+
+UBGTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+TSBTab:CreateButton({
+	Name = "🛡️ AUTO BLOCK v1",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"))()
+		return "https://raw.githubusercontent.com/hellattexyss/thestrongestbattlegrounds/refs/heads/main/cpsautoblock.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "💠 best auto block v2",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
+		return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "⚡ AUTO TECHS V2",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"))()
+		return "https://raw.githubusercontent.com/hellattexyss/autotechs/refs/heads/main/cpstechs.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "➡️ SIDE DASH ASSIST",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"))()
+		return "https://api.luarmor.net/files/v3/loaders/54d6b993fe3a4c1f5c3e375eba35e5ec.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "🔁 M1 RESET",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/fa8d49690e680794f761b497742fd1c2.lua"))()
+		return "https://api.getpolsec.com/scripts/hosted/fa8d49690e680794f761b497742fd1c2.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "💥 BOOMY LoopDash V2",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"))()
+		return "https://api.getpolsec.com/scripts/hosted/84e2bd29cccc0f5302267e4dc952cff6816db4af36416cbd477daaa26d60863d.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "🌀 Instant Twisted Old",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"))()
+		return "https://api.getpolsec.com/scripts/hosted/1e18721250d10562953e57cd75a2e7e4151b7d20e876930c0f394056d253b3fd.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "↩️ Backdash Cancel",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"))()
+		return "https://api.getpolsec.com/scripts/hosted/0b57119c46c0267e6791f789ace2ffac7b752a63224d86a0b6f95d68aec099ac.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "⌨️ Back dash cancel PC (E)",
+	Callback = function()
+		getgenv().keybind = "E"
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"))()
+		return "https://raw.githubusercontent.com/Cyborg883/BackDashCancel/refs/heads/main/Protected_8787792836664625.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "🔥 SUPA TECH (bug)",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"))()
+		return "https://api.getpolsec.com/scripts/hosted/2753546c83053761e44664d36ffe5035d6e20fc8aee1d19f0eb7b933974ae537.lua"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "🐱 MEOW TECH (not working)",
+	Callback = function()
+		loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"))()
+		return "https://api.junkie-development.de/api/v1/luascripts/public/2345da4cc975b07b3f250f6a83c45687a70c1999b9c46219cd6893771f9dd542/download"
+	end
+})
+
+TSBTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+VILTab:CreateButton({
+	Name = "🩸 NZ PvP Team",
+	Callback = function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"))()
+		return "https://raw.githubusercontent.com/yenderelmascapito-collab/Proyecto-Viltrumita/refs/heads/main/script.lua"
+	end
+})
+
+VILTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+BBZTab:CreateButton({
+	Name = "🏀 BBZ NZ",
+	Callback = function()
+		loadstring(game:HttpGet("https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"))()
+		return "https://rawscripts.net/raw/UPD-Basketball:-Zero-Basketball-Zero-OP-43354"
+	end
+})
+
+BBZTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+RIVTab:CreateButton({
+	Name = "⚔️ Rivals v1",
+	Callback = function()
+		loadstring(game:HttpGet("https://pastefy.app/YiGY38uo/raw"))()
+		return "https://pastefy.app/YiGY38uo/raw"
+	end
+})
+
+RIVTab:CreateButton({
+	Name = "🔄 Rejoin",
+	Callback = Rejoin
+})
+
+SymbolsTab:CreateButton({
+	Name = "🔴 Rojo",
+	Callback = function() setCornerColor(Color3.fromRGB(255,60,60)) end
+})
+
+SymbolsTab:CreateButton({
+	Name = "🟢 Verde",
+	Callback = function() setCornerColor(Color3.fromRGB(80,200,80)) end
+})
+
+SymbolsTab:CreateButton({
+	Name = "🔵 Azul",
+	Callback = function() setCornerColor(Color3.fromRGB(100,160,255)) end
+})
+
+SymbolsTab:CreateButton({
+	Name = "⚪ Blanco",
+	Callback = function() setCornerColor(Color3.fromRGB(255,255,255)) end
+})
+
+SymbolsTab:CreateButton({
+	Name = "⚫ Negro",
+	Callback = function() setCornerColor(Color3.fromRGB(20,20,20)) end
+})
+
+SymbolsTab:CreateButton({
+	Name = "🎨 RGB",
+	Callback = function()
+		local startTime = tick()
+		local conn
+		conn = RunService.Heartbeat:Connect(function(dt)
+			if cornerSymbols and #cornerSymbols > 0 and cornerSymbols[1] and cornerSymbols[1].Parent then
+				local elapsed = tick() - startTime
+				local hue = (elapsed * 0.5) % 1
+				local col = Color3.fromHSV(hue, 1, 1)
+				setCornerColor(col)
+			else
+				conn:Disconnect()
+			end
+		end)
+	end
+})
+
+SymbolsTab:CreateButton({
+	Name = "🔁 Toggle Symbols",
+	Callback = function()
+		cornerSymbolsEnabled = not cornerSymbolsEnabled
+		if cornerSymbolsEnabled then
+			if not cornerSymbols or #cornerSymbols == 0 then
+				local positions = {
+					UDim2.new(0,10,0,10), UDim2.new(1,-58,0,10), UDim2.new(0,10,1,-58), UDim2.new(1,-58,1,-58)
+				}
+				for _, pos in ipairs(positions) do
+					local s = Instance.new("TextLabel", EffectsGui)
+					s.Size = UDim2.new(0,48,0,48)
+					s.Position = pos
+					s.BackgroundTransparency = 1
+					s.Text = "卐"
+					s.Font = Enum.Font.GothamBold
+					s.TextSize = 36
+					s.TextColor3 = Color3.fromRGB(255,60,60)
+					s.Rotation = 0
+					table.insert(cornerSymbols, s)
+				end
+			else
+				for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = true end end
+			end
+		else
+			for _, s in ipairs(cornerSymbols) do if s and s.Parent then s.Visible = false end end
+		end
+	end
+})
 
 task.spawn(function()
     task.wait(0.5)
     startHub()
 end)
+
+Rayfield:LoadConfiguration()
