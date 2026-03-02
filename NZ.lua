@@ -458,7 +458,7 @@ TSBTab:CreateButton({
 	Name = "💠 best auto block v2",
 	Callback = function()
 		loadstring(game:HttpGet("https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"))()
-		return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f2600e64c1a112.lua"
+		return "https://raw.githubusercontent.com/dinhthanhtuankiet1762009-sudo/Js/refs/heads/main/93f200e64c1a112.lua"
 	end
 })
 
